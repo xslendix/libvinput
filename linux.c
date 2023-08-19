@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include <X11/XKBlib.h>
 #include <X11/Xlib.h>
@@ -23,15 +24,18 @@ VInputError _Listener_init(Listener *listener)
 	listener->data = malloc(sizeof(ListenerInternal));
 	ListenerInternal *data = listener->data;
 
+	// Open X11 display connection
 	data->dpy = XOpenDisplay(NULL);
 	if (!data->dpy) return VINPUT_X11_DISPLAY;
 
+	// Get keyboard map
 	data->keyboard_map = XkbGetMap(data->dpy, XkbAllClientInfoMask, XkbUseCoreKbd);
 	if (!data->keyboard_map) {
 		XCloseDisplay(data->dpy);
 		return VINPUT_X11_XKB_GET_MAP;
 	}
 
+	// Prepare XRecord to listen to global events
 	XRecordClientSpec clients = XRecordAllClients;
 	XRecordRange *range = XRecordAllocRange();
 	if (range == 0) {
@@ -41,9 +45,11 @@ VInputError _Listener_init(Listener *listener)
 	}
 
 	memset(range, 0, sizeof(XRecordRange));
+	// We only want KeyPresses and KeyReleases
 	range->device_events.first = KeyPress;
 	range->device_events.last = KeyRelease;
 
+	// Create the context
 	data->context = XRecordCreateContext(data->dpy, 0, &clients, 1, &range, 1);
 	if (!data->context) {
 		XFree(range);
@@ -56,6 +62,7 @@ VInputError _Listener_init(Listener *listener)
 
 	XSync(data->dpy, True);
 
+	// Open a second display for datalink, this is what keeps events coming
 	data->dpy_datalink = XOpenDisplay(NULL);
 	if (!data->dpy_datalink) {
 		XRecordFreeContext(data->dpy, data->context);
@@ -109,8 +116,22 @@ KeySym keycode_to_keysym(ListenerInternal *data, KeyCode keycode, unsigned int e
 
 KeyboardEvent xevent_to_key_event(ListenerInternal *data_, XRecordInterceptData *data)
 {
+	// Get time in seconds and nanoseconds
+	struct timespec ts;
+	if (clock_gettime(CLOCK_MONOTONIC, &ts) != 0) {
+		return (KeyboardEvent) {
+			.pressed = 0,
+			.keychar = 0,
+			.keycode = 0,
+			.keysym = 0,
+			.timestamp = 0,
+		};
+	}
+	size_t timestamp = ts.tv_nsec / 1000000;
+
 	xEvent *event = (xEvent *)data->data;
 	KeySym keysym = keycode_to_keysym(data_, event->u.u.detail, 0);
+	// If keysym is not ascii, set keychar to 0.
 	char ch = keysym & 0xff;
 	if ((keysym & 0xff00) > 0) ch = '\0';
 
@@ -121,6 +142,7 @@ KeyboardEvent xevent_to_key_event(ListenerInternal *data_, XRecordInterceptData 
 			.keychar = ch,
 			.keycode = event->u.u.detail,
 			.keysym = keysym,
+			.timestamp = timestamp,
 		};
 	case KeyRelease:
 		return (KeyboardEvent) {
@@ -128,6 +150,7 @@ KeyboardEvent xevent_to_key_event(ListenerInternal *data_, XRecordInterceptData 
 			.keychar = ch,
 			.keycode = event->u.u.detail,
 			.keysym = keysym,
+			.timestamp = timestamp,
 		};
 	}
 
@@ -136,6 +159,7 @@ KeyboardEvent xevent_to_key_event(ListenerInternal *data_, XRecordInterceptData 
 		.keychar = 0,
 		.keycode = 0,
 		.keysym = 0,
+		.timestamp = 0,
 	};
 }
 
@@ -156,6 +180,7 @@ VInputError Listener_start(Listener *listener, KeyboardCallback callback)
 	ListenerInternal *data = listener->data;
 	data->callback = callback;
 
+	// Start listening for events
 	if (!XRecordEnableContext(
 	        data->dpy_datalink, data->context, xrecord_callback, (XPointer)data))
 		return VINPUT_X11_ENABLE_XRECORD;

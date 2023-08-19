@@ -2,23 +2,26 @@
 #define LIBVINPUT_H
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
+// A keyboard event
 typedef struct _KeyboardEvent
 {
-	bool pressed;
-	char keychar;
-	uint16_t keycode;
-	uint16_t keysym;
+	bool pressed;     // Whether or not a key has been pressed or released
+	char keychar;     // The ASCII character of the key, 0 if unavailable
+	uint16_t keycode; // The scan code of the key
+	uint16_t keysym;  // On X11, the KeySym, on windows, the Virtual Key code
 
-	unsigned long long timestamp;
+	size_t timestamp; // Timestamp of event, in milliseconds
 } KeyboardEvent;
 
+// Listener for events
 typedef struct _Listener
 {
-	bool listen_keyboard;
-	bool initialized;
-	void *data;
+	bool listen_keyboard; // Whether or not to listen for keyboard events
+	bool initialized;     // Whether or not the listener is initialized
+	void *data;           // Internal data, do not use
 } Listener;
 
 typedef enum _VInputError
@@ -42,8 +45,11 @@ typedef enum _VInputError
 
 typedef void (*KeyboardCallback)(KeyboardEvent);
 
+// Create a Listener, does not allocate memory for the listener.
 VInputError Listener_create(Listener *listener, bool listen_keyboard);
-VInputError Listener_start(Listener *listener, KeyboardCallback callback); // blocking
+// Make a Listener start listening. This is a blocking call.
+VInputError Listener_start(Listener *listener, KeyboardCallback callback);
+// Free up internal data in the Listener.
 VInputError Listener_free(Listener *listener);
 
 #endif // LIBVINPUT_H

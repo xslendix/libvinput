@@ -18,8 +18,11 @@ KeyboardCallback kcallback;
 KeyboardEvent generate_keyevent(WPARAM wparam, LPARAM lparam)
 {
 	(void)lparam;
+	DWORD timestamp = GetTickCount(); // Milliseconds, from boot time
+
+	// Cast lParam to keyboard hook data
 	KBDLLHOOKSTRUCT *keyboard = (KBDLLHOOKSTRUCT *)lparam;
-	DWORD vkCode = keyboard->vkCode;
+	DWORD vkCode = keyboard->vkCode; // Virtual key code
 
 	char keychar = '\0';
 	WORD scanCode = keyboard->scanCode;
@@ -33,6 +36,7 @@ KeyboardEvent generate_keyevent(WPARAM wparam, LPARAM lparam)
 			.keychar = keychar,
 			.keycode = scanCode,
 			.keysym = vkCode,
+			.timestamp = timestamp,
 		};
 	} else { // No translation
 		return (KeyboardEvent) {
@@ -40,12 +44,14 @@ KeyboardEvent generate_keyevent(WPARAM wparam, LPARAM lparam)
 			.keychar = '\0',
 			.keycode = scanCode,
 			.keysym = vkCode,
+			.timestamp = timestamp,
 		};
 	}
 }
 
 LRESULT CALLBACK keyboard_callback(int code, WPARAM wparam, LPARAM lparam)
 {
+	// Handle key events or call next hook in chain.
 	switch (wparam) {
 	case WM_KEYDOWN:
 	case WM_KEYUP: kcallback(generate_keyevent(wparam, lparam)); break;
@@ -59,9 +65,11 @@ VInputError _Listener_init(Listener *listener)
 	listener->data = malloc(sizeof(ListenerInternal));
 	ListenerInternal *data = listener->data;
 
+	// Get module handle
 	data->exe = GetModuleHandle(NULL);
 	if (!data->exe) return VINPUT_WINAPI_MODULE;
 
+	// Create keyboard hook
 	data->key_hook
 	    = SetWindowsHookEx(WH_KEYBOARD_LL, (HOOKPROC)keyboard_callback, data->exe, 0);
 	if (!data->key_hook) return VINPUT_WINAPI_HOOK;
@@ -75,6 +83,7 @@ VInputError Listener_start(Listener *listener, KeyboardCallback callback)
 
 	kcallback = callback;
 
+	// Propagate messages.
 	MSG msg;
 	while (GetMessage(&msg, NULL, 0, 0) != 0) {
 		TranslateMessage(&msg);
