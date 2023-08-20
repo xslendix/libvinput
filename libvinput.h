@@ -36,10 +36,14 @@ typedef enum _VInputError
 	VINPUT_OK = 0,
 
 	VINPUT_UNINITIALIZED,
+	VINPUT_MALLOC,
 
 	// WINAPI
 	VINPUT_WINAPI_MODULE,
 	VINPUT_WINAPI_HOOK,
+	VINPUT_WINAPI_SENDINPUT,
+	VINPUT_WINAPI_VKKEYSCANA,
+	VINPUT_WINAPI_GETKEYBOARDSTATE,
 
 	// X11
 	VINPUT_X11_DISPLAY,
@@ -63,11 +67,11 @@ VInputError Listener_free(Listener *listener);
 
 // Create an Emulator, does not allocate memory for the emulator.
 VInputError Emulator_create(Emulator *emulator);
-// Get current keyboard state, allocates memory
+// Get current keyboard state, modifiers only, allocates memory
 VInputError Emulator_keyboard_state_get(Emulator *emulator, int **state, int *nstate);
-// Clear current keyboard state
+// Clear current keyboard state, modifiers only
 VInputError Emulator_keyboard_state_clear(Emulator *emulator);
-// Set current keyboard state, clears current keyboard state
+// Set current keyboard state, modifiers only, clears current keyboard state
 VInputError Emulator_keyboard_state_set(Emulator *emulator, int *state, int nstate);
 // Press a key.
 VInputError Emulator_press(Emulator *emulator, uint16_t keysym);

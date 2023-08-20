@@ -40,14 +40,14 @@ int main(void)
 		printf("1NOT OK! %d\n", ret);
 		return -1;
 	}
-	if ((ret = Emulator_press(&emu, 0x0061)) != VINPUT_OK) {
-		printf("2NOT OK! %d\n", ret);
-		return -1;
-	};
-	if ((ret = Emulator_release(&emu, 0x0061)) != VINPUT_OK) {
-		printf("3NOT OK! %d\n", ret);
-		return -1;
-	};
+	//if ((ret = Emulator_press(&emu, 0x0061)) != VINPUT_OK) {
+	//	printf("2NOT OK! %d\n", ret);
+	//	return -1;
+	//};
+	//if ((ret = Emulator_release(&emu, 0x0061)) != VINPUT_OK) {
+	//	printf("3NOT OK! %d\n", ret);
+	//	return -1;
+	//};
 	if ((ret = Emulator_typec(&emu, 'b')) != VINPUT_OK) {
 		printf("4NOT OK! %d\n", ret);
 		return -1;
@@ -56,6 +56,7 @@ int main(void)
 		printf("5NOT OK! %d\n", ret);
 		return -1;
 	};
+	usleep(1000 * 50);
 
 	int *state, nstate;
 	if ((ret = Emulator_keyboard_state_get(&emu, &state, &nstate)) != VINPUT_OK) {
@@ -66,15 +67,15 @@ int main(void)
 		printf("7NOT OK! %d\n", ret);
 		return -1;
 	}
-	if ((ret = Emulator_press(&emu, 0xffe5)) != VINPUT_OK) {
+	if ((ret = Emulator_press(&emu, 0x10)) != VINPUT_OK) {
 		printf("8NOT OK! %d\n", ret);
 		return -1;
 	};
-	if ((ret = Emulator_types(&emu, "capslock", 4)) != VINPUT_OK) {
+	if ((ret = Emulator_types(&emu, "Capital letters", 15)) != VINPUT_OK) {
 		printf("9NOT OK! %d\n", ret);
 		return -1;
 	};
-	if ((ret = Emulator_release(&emu, 0xffe5)) != VINPUT_OK) {
+	if ((ret = Emulator_release(&emu, 0x10)) != VINPUT_OK) {
 		printf("10NOT OK! %d\n", ret);
 		return -1;
 	};
