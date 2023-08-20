@@ -74,6 +74,8 @@ VInputError _Listener_init(Listener *listener)
 	    = SetWindowsHookEx(WH_KEYBOARD_LL, (HOOKPROC)keyboard_callback, data->exe, 0);
 	if (!data->key_hook) return VINPUT_WINAPI_HOOK;
 
+	listener->initialized = true;
+
 	return VINPUT_OK;
 }
 
