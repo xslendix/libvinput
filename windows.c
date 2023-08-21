@@ -13,7 +13,7 @@ typedef struct _ListenerInternal
 	HHOOK key_hook;
 } ListenerInternal;
 
-KeyboardCallback kcallback;
+DWORD tls_index; // Thread-Local Storage
 
 KeyboardEvent generate_keyevent(WPARAM wparam, LPARAM lparam)
 {
@@ -51,10 +51,11 @@ KeyboardEvent generate_keyevent(WPARAM wparam, LPARAM lparam)
 
 LRESULT CALLBACK keyboard_callback(int code, WPARAM wparam, LPARAM lparam)
 {
+	KeyboardCallback cb = TlsGetValue(tls_index);
 	// Handle key events or call next hook in chain.
 	switch (wparam) {
 	case WM_KEYDOWN:
-	case WM_KEYUP: kcallback(generate_keyevent(wparam, lparam)); break;
+	case WM_KEYUP: cb(generate_keyevent(wparam, lparam)); break;
 	default: return CallNextHookEx(NULL, code, wparam, lparam);
 	}
 	return 0;
@@ -74,6 +75,12 @@ VInputError _Listener_init(Listener *listener)
 	    = SetWindowsHookEx(WH_KEYBOARD_LL, (HOOKPROC)keyboard_callback, data->exe, 0);
 	if (!data->key_hook) return VINPUT_WINAPI_HOOK;
 
+	tls_index = TlsAlloc();
+	if (tls_index == TLS_OUT_OF_INDEXES) {
+		UnhookWindowsHookEx(data->key_hook);
+		return VINPUT_MALLOC;
+	}
+
 	listener->initialized = true;
 
 	return VINPUT_OK;
@@ -82,8 +89,9 @@ VInputError _Listener_init(Listener *listener)
 VInputError Listener_start(Listener *listener, KeyboardCallback callback)
 {
 	if (!listener->initialized) return VINPUT_UNINITIALIZED;
+	ListenerInternal *data = listener->data;
 
-	kcallback = callback;
+	TlsSetValue(tls_index, callback);
 
 	// Propagate messages.
 	MSG msg;
@@ -102,7 +110,8 @@ VInputError Listener_free(Listener *listener)
 
 	UnhookWindowsHookEx(data->key_hook);
 	memset(data, 0, sizeof(ListenerInternal));
-	kcallback = NULL;
+
+	TlsFree(tls_index);
 
 	return VINPUT_OK;
 }
