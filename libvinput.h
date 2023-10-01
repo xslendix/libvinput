@@ -1,6 +1,10 @@
 #ifndef LIBVINPUT_H
 #define LIBVINPUT_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -83,5 +87,9 @@ VInputError Emulator_typec(Emulator *emulator, char ch);
 VInputError Emulator_types(Emulator *emulator, char *buf, size_t len);
 // Free up internal data in the Emulator.
 VInputError Emulator_free(Emulator *emulator);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // LIBVINPUT_H
