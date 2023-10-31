@@ -19,3 +19,9 @@ clean:
 	rm -f test
 	rm -f libvinput.dll
 	rm -f libvinput.so
+
+.PHONY: install
+install: libvinput.so
+	install -m 777 libvinput.so /usr/local/lib
+	install -m 644 libvinput.h /usr/local/include
+	install -m 644 libvinput.pc /usr/local/lib/pkgconfig
