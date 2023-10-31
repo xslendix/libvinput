@@ -3,6 +3,14 @@
 extern VInputError _Listener_init(Listener *);
 extern VInputError _Emulator_init(Emulator *);
 
+bool VInput_modifier_pressed_except_shift(KeyboardModifiers modifiers)
+{
+	return modifiers.left_control || modifiers.right_control || modifiers.left_alt
+	       || modifiers.right_alt || modifiers.left_meta || modifiers.right_meta
+	       || modifiers.left_super || modifiers.right_super || modifiers.left_hyper
+	       || modifiers.right_hyper;
+}
+
 char const *VInput_error_get_message(VInputError error)
 {
 	switch (error) {

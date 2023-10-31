@@ -82,6 +82,9 @@ typedef enum _VInputError
 
 typedef void (*KeyboardCallback)(KeyboardEvent);
 
+// Check if any modifier has been pressed except shift
+bool VInput_modifier_pressed_except_shift(KeyboardModifiers modifiers);
+
 // Get the error message as a constant string.
 char const *VInput_error_get_message(VInputError error);
 
