@@ -142,6 +142,12 @@ KeyboardEvent xevent_to_key_event(ListenerInternal *data_, XRecordInterceptData 
 	// If keysym is not ascii, set keychar to 0.
 	char ch = keysym & 0xff;
 	if ((keysym & 0xff00) > 0) ch = '\0';
+	if (keysym == XK_Return)
+		ch = '\n';
+	else if (keysym == XK_Linefeed)
+		ch = '\r';
+	else if (keysym == XK_BackSpace)
+		ch = '\b';
 
 	KeyboardEvent final_event;
 
