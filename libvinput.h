@@ -62,6 +62,9 @@ typedef enum _VInputError
 
 typedef void (*KeyboardCallback)(KeyboardEvent);
 
+// Get the error message as a constant string.
+char const *VInput_error_get_message(VInputError error);
+
 // Create a Listener, does not allocate memory for the listener.
 VInputError Listener_create(Listener *listener, bool listen_keyboard);
 // Make a Listener start listening. This is a blocking call.
