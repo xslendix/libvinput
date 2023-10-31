@@ -10,6 +10,9 @@
 #include <X11/extensions/XKB.h>
 #include <X11/extensions/record.h>
 
+#define XK_MISCELLANY
+#include <X11/keysymdef.h>
+
 typedef struct _ListenerInternal
 {
 	Display *dpy, *dpy_datalink;
@@ -17,12 +20,16 @@ typedef struct _ListenerInternal
 	XRecordContext context;
 
 	KeyboardCallback callback;
+
+	KeyboardModifiers modifiers;
 } ListenerInternal;
 
 VInputError _Listener_init(Listener *listener)
 {
 	listener->data = malloc(sizeof(ListenerInternal));
 	ListenerInternal *data = listener->data;
+
+	memset(&data->modifiers, 0, sizeof(KeyboardModifiers));
 
 	// Open X11 display connection
 	data->dpy = XOpenDisplay(NULL);
@@ -124,6 +131,7 @@ KeyboardEvent xevent_to_key_event(ListenerInternal *data_, XRecordInterceptData 
 			.keychar = 0,
 			.keycode = 0,
 			.keysym = 0,
+			.modifiers = data_->modifiers,
 			.timestamp = 0,
 		};
 	}
@@ -135,32 +143,67 @@ KeyboardEvent xevent_to_key_event(ListenerInternal *data_, XRecordInterceptData 
 	char ch = keysym & 0xff;
 	if ((keysym & 0xff00) > 0) ch = '\0';
 
+	KeyboardEvent final_event;
+
 	switch (event->u.u.type) {
 	case KeyPress:
-		return (KeyboardEvent) {
+		final_event = (KeyboardEvent) {
 			.pressed = true,
 			.keychar = ch,
 			.keycode = event->u.u.detail,
 			.keysym = keysym,
+			.modifiers = data_->modifiers,
 			.timestamp = timestamp,
 		};
+		break;
 	case KeyRelease:
-		return (KeyboardEvent) {
+		final_event = (KeyboardEvent) {
 			.pressed = false,
 			.keychar = ch,
 			.keycode = event->u.u.detail,
 			.keysym = keysym,
+			.modifiers = data_->modifiers,
 			.timestamp = timestamp,
+		};
+		break;
+	default:
+		return (KeyboardEvent) {
+			.pressed = false,
+			.keychar = 0,
+			.keycode = 0,
+			.keysym = 0,
+			.timestamp = 0,
 		};
 	}
 
-	return (KeyboardEvent) {
-		.pressed = false,
-		.keychar = 0,
-		.keycode = 0,
-		.keysym = 0,
-		.timestamp = 0,
-	};
+	if (final_event.keycode == XK_Shift_L)
+		data_->modifiers.left_shift = final_event.pressed;
+	else if (final_event.keycode == XK_Shift_R)
+		data_->modifiers.right_shift = final_event.pressed;
+	else if (final_event.keycode == XK_Control_L)
+		data_->modifiers.left_control = final_event.pressed;
+	else if (final_event.keycode == XK_Control_R)
+		data_->modifiers.right_control = final_event.pressed;
+	else if (final_event.keycode == XK_Alt_L)
+		data_->modifiers.left_alt = final_event.pressed;
+	else if (final_event.keycode == XK_Alt_R)
+		data_->modifiers.right_alt = final_event.pressed;
+	else if (final_event.keycode == XK_Meta_L)
+		data_->modifiers.left_meta = final_event.pressed;
+	else if (final_event.keycode == XK_Meta_R)
+		data_->modifiers.right_meta = final_event.pressed;
+	else if (final_event.keycode == XK_Super_L)
+		data_->modifiers.left_super = final_event.pressed;
+	else if (final_event.keycode == XK_Super_R)
+		data_->modifiers.right_super = final_event.pressed;
+	else if (final_event.keycode == XK_Hyper_L)
+		data_->modifiers.left_hyper = final_event.pressed;
+	else if (final_event.keycode == XK_Hyper_R)
+		data_->modifiers.right_hyper = final_event.pressed;
+
+	final_event.modifiers = data_->modifiers;
+
+	return final_event;
 }
 
 void xrecord_callback(XPointer incoming, XRecordInterceptData *data)

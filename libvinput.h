@@ -9,6 +9,24 @@ extern "C" {
 #include <stddef.h>
 #include <stdint.h>
 
+// Modifiers on the keyboard
+// Currently, only used by the Listener.
+typedef struct _KeyboardModifiers
+{
+	bool left_control : 1;
+	bool right_control : 1;
+	bool left_shift : 1;
+	bool right_shift : 1;
+	bool left_alt : 1;
+	bool right_alt : 1;
+	bool left_meta : 1;
+	bool right_meta : 1;
+	bool left_super : 1;
+	bool right_super : 1;
+	bool left_hyper : 1;
+	bool right_hyper : 1;
+} KeyboardModifiers;
+
 // A keyboard event
 typedef struct _KeyboardEvent
 {
@@ -16,6 +34,8 @@ typedef struct _KeyboardEvent
 	char keychar;     // The ASCII character of the key, 0 if unavailable
 	uint16_t keycode; // The scan code of the key
 	uint16_t keysym;  // On X11, the KeySym, on windows, the Virtual Key code
+
+	KeyboardModifiers modifiers;
 
 	size_t timestamp; // Timestamp of event, in milliseconds
 } KeyboardEvent;
