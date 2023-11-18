@@ -29,6 +29,8 @@ VInputError _Listener_init(Listener *listener)
 	listener->data = malloc(sizeof(ListenerInternal));
 	ListenerInternal *data = listener->data;
 
+	VInputError result = VINPUT_OK;
+
 	memset(&data->modifiers, 0, sizeof(KeyboardModifiers));
 
 	// Open X11 display connection
@@ -38,17 +40,16 @@ VInputError _Listener_init(Listener *listener)
 	// Get keyboard map
 	data->keyboard_map = XkbGetMap(data->dpy, XkbAllClientInfoMask, XkbUseCoreKbd);
 	if (!data->keyboard_map) {
-		XCloseDisplay(data->dpy);
-		return VINPUT_X11_XKB_GET_MAP;
+		result = VINPUT_X11_XKB_GET_MAP;
+		goto cleanup;
 	}
 
 	// Prepare XRecord to listen to global events
 	XRecordClientSpec clients = XRecordAllClients;
 	XRecordRange *range = XRecordAllocRange();
 	if (range == 0) {
-		XkbFreeClientMap(data->keyboard_map, XkbAllClientInfoMask, true);
-		XCloseDisplay(data->dpy);
-		return VINPUT_X11_RANGE_ALLOC;
+		result = VINPUT_X11_RANGE_ALLOC;
+		goto cleanup;
 	}
 
 	memset(range, 0, sizeof(XRecordRange));
@@ -60,9 +61,8 @@ VInputError _Listener_init(Listener *listener)
 	data->context = XRecordCreateContext(data->dpy, 0, &clients, 1, &range, 1);
 	if (!data->context) {
 		XFree(range);
-		XkbFreeClientMap(data->keyboard_map, XkbAllClientInfoMask, true);
-		XCloseDisplay(data->dpy);
-		return VINPUT_X11_XRECORD_CONTEXT;
+		result = VINPUT_X11_XRECORD_CONTEXT;
+		goto cleanup;
 	}
 
 	XFree(range);
@@ -72,14 +72,15 @@ VInputError _Listener_init(Listener *listener)
 	// Open a second display for datalink, this is what keeps events coming
 	data->dpy_datalink = XOpenDisplay(NULL);
 	if (!data->dpy_datalink) {
-		XRecordFreeContext(data->dpy, data->context);
-		XkbFreeClientMap(data->keyboard_map, XkbAllClientInfoMask, true);
-		XCloseDisplay(data->dpy);
-		return VINPUT_X11_DISPLAY_DATALINK;
+		result = VINPUT_X11_DISPLAY_DATALINK;
+		goto cleanup;
 	}
 
 	listener->initialized = true;
-	return VINPUT_OK;
+
+cleanup:
+	if (result != VINPUT_OK) Listener_free(listener);
+	return result;
 }
 
 // https://stackoverflow.com/a/10233743
@@ -126,14 +127,9 @@ KeyboardEvent xevent_to_key_event(ListenerInternal *data_, XRecordInterceptData 
 	// Get time in seconds and nanoseconds
 	struct timespec ts;
 	if (clock_gettime(CLOCK_MONOTONIC, &ts) != 0) {
-		return (KeyboardEvent) {
-			.pressed = 0,
-			.keychar = 0,
-			.keycode = 0,
-			.keysym = 0,
-			.modifiers = data_->modifiers,
-			.timestamp = 0,
-		};
+		KeyboardEvent evt = { 0 };
+		evt.modifiers = data_->modifiers;
+		return evt;
 	}
 	size_t timestamp = ts.tv_nsec / 1000000;
 
@@ -149,63 +145,35 @@ KeyboardEvent xevent_to_key_event(ListenerInternal *data_, XRecordInterceptData 
 	else if (keysym == XK_BackSpace)
 		ch = '\b';
 
-	KeyboardEvent final_event;
+	KeyboardEvent final_event = {
+		.pressed = false,
+		.keychar = ch,
+		.keycode = event->u.u.detail,
+		.keysym = keysym,
+		.modifiers = data_->modifiers,
+		.timestamp = timestamp,
+	};
 
 	switch (event->u.u.type) {
-	case KeyPress:
-		final_event = (KeyboardEvent) {
-			.pressed = true,
-			.keychar = ch,
-			.keycode = event->u.u.detail,
-			.keysym = keysym,
-			.modifiers = data_->modifiers,
-			.timestamp = timestamp,
-		};
-		break;
-	case KeyRelease:
-		final_event = (KeyboardEvent) {
-			.pressed = false,
-			.keychar = ch,
-			.keycode = event->u.u.detail,
-			.keysym = keysym,
-			.modifiers = data_->modifiers,
-			.timestamp = timestamp,
-		};
-		break;
-	default:
-		return (KeyboardEvent) {
-			.pressed = false,
-			.keychar = 0,
-			.keycode = 0,
-			.keysym = 0,
-			.timestamp = 0,
-		};
+	case KeyPress: final_event.pressed = true; break;
+	case KeyRelease: final_event.pressed = false; break;
+	default: return (KeyboardEvent) { 0 };
 	}
 
-	if (final_event.keycode == XK_Shift_L)
-		data_->modifiers.left_shift = final_event.pressed;
-	else if (final_event.keycode == XK_Shift_R)
-		data_->modifiers.right_shift = final_event.pressed;
-	else if (final_event.keycode == XK_Control_L)
-		data_->modifiers.left_control = final_event.pressed;
-	else if (final_event.keycode == XK_Control_R)
-		data_->modifiers.right_control = final_event.pressed;
-	else if (final_event.keycode == XK_Alt_L)
-		data_->modifiers.left_alt = final_event.pressed;
-	else if (final_event.keycode == XK_Alt_R)
-		data_->modifiers.right_alt = final_event.pressed;
-	else if (final_event.keycode == XK_Meta_L)
-		data_->modifiers.left_meta = final_event.pressed;
-	else if (final_event.keycode == XK_Meta_R)
-		data_->modifiers.right_meta = final_event.pressed;
-	else if (final_event.keycode == XK_Super_L)
-		data_->modifiers.left_super = final_event.pressed;
-	else if (final_event.keycode == XK_Super_R)
-		data_->modifiers.right_super = final_event.pressed;
-	else if (final_event.keycode == XK_Hyper_L)
-		data_->modifiers.left_hyper = final_event.pressed;
-	else if (final_event.keycode == XK_Hyper_R)
-		data_->modifiers.right_hyper = final_event.pressed;
+	switch (final_event.keycode) {
+	case XK_Shift_L: data_->modifiers.left_shift = final_event.pressed; break;
+	case XK_Shift_R: data_->modifiers.right_shift = final_event.pressed; break;
+	case XK_Control_L: data_->modifiers.left_control = final_event.pressed; break;
+	case XK_Control_R: data_->modifiers.right_control = final_event.pressed; break;
+	case XK_Alt_L: data_->modifiers.left_alt = final_event.pressed; break;
+	case XK_Alt_R: data_->modifiers.right_alt = final_event.pressed; break;
+	case XK_Meta_L: data_->modifiers.left_meta = final_event.pressed; break;
+	case XK_Meta_R: data_->modifiers.right_meta = final_event.pressed; break;
+	case XK_Super_L: data_->modifiers.left_super = final_event.pressed; break;
+	case XK_Super_R: data_->modifiers.right_super = final_event.pressed; break;
+	case XK_Hyper_L: data_->modifiers.left_hyper = final_event.pressed; break;
+	case XK_Hyper_R: data_->modifiers.right_hyper = final_event.pressed; break;
+	}
 
 	final_event.modifiers = data_->modifiers;
 
@@ -242,11 +210,15 @@ VInputError Listener_free(Listener *listener)
 	if (!listener->initialized) return VINPUT_UNINITIALIZED;
 	ListenerInternal *data = listener->data;
 
-	XCloseDisplay(data->dpy_datalink);
-	XRecordFreeContext(data->dpy, data->context);
-	XkbFreeClientMap(data->keyboard_map, XkbAllClientInfoMask, true);
-	XCloseDisplay(data->dpy);
-	memset(data, 0, sizeof(ListenerInternal));
+	if (data) {
+		if (data->dpy_datalink) XCloseDisplay(data->dpy_datalink);
+		if (data->context) XRecordFreeContext(data->dpy, data->context);
+		if (data->keyboard_map)
+			XkbFreeClientMap(data->keyboard_map, XkbAllClientInfoMask, true);
+		if (data->dpy) XCloseDisplay(data->dpy);
+		memset(data, 0, sizeof(ListenerInternal));
+		free(data);
+	}
 
 	return VINPUT_OK;
 }
