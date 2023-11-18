@@ -13,7 +13,7 @@
 #define XK_MISCELLANY
 #include <X11/keysymdef.h>
 
-typedef struct _ListenerInternal
+typedef struct _EventListenerInternal
 {
 	Display *dpy, *dpy_datalink;
 	XkbDescPtr keyboard_map;
@@ -22,12 +22,12 @@ typedef struct _ListenerInternal
 	KeyboardCallback callback;
 
 	KeyboardModifiers modifiers;
-} ListenerInternal;
+} EventListenerInternal;
 
-VInputError _Listener_init(Listener *listener)
+VInputError _Listener_init(EventListener *listener)
 {
-	listener->data = malloc(sizeof(ListenerInternal));
-	ListenerInternal *data = listener->data;
+	listener->data = malloc(sizeof(EventListenerInternal));
+	EventListenerInternal *data = listener->data;
 
 	VInputError result = VINPUT_OK;
 
@@ -79,12 +79,13 @@ VInputError _Listener_init(Listener *listener)
 	listener->initialized = true;
 
 cleanup:
-	if (result != VINPUT_OK) Listener_free(listener);
+	if (result != VINPUT_OK) EventListener_free(listener);
 	return result;
 }
 
 // https://stackoverflow.com/a/10233743
-KeySym keycode_to_keysym(ListenerInternal *data, KeyCode keycode, unsigned int event_mask)
+KeySym keycode_to_keysym(
+    EventListenerInternal *data, KeyCode keycode, unsigned int event_mask)
 {
 	KeySym keysym = NoSymbol;
 
@@ -122,7 +123,8 @@ KeySym keycode_to_keysym(ListenerInternal *data, KeyCode keycode, unsigned int e
 	return keysym;
 }
 
-KeyboardEvent xevent_to_key_event(ListenerInternal *data_, XRecordInterceptData *data)
+KeyboardEvent xevent_to_key_event(
+    EventListenerInternal *data_, XRecordInterceptData *data)
 {
 	// Get time in seconds and nanoseconds
 	struct timespec ts;
@@ -182,7 +184,7 @@ KeyboardEvent xevent_to_key_event(ListenerInternal *data_, XRecordInterceptData 
 
 void xrecord_callback(XPointer incoming, XRecordInterceptData *data)
 {
-	ListenerInternal *data_ = (ListenerInternal *)incoming;
+	EventListenerInternal *data_ = (EventListenerInternal *)incoming;
 	if (data->category != XRecordFromServer) goto xrecord_callback_end;
 
 	data_->callback(xevent_to_key_event(data_, data));
@@ -191,10 +193,10 @@ xrecord_callback_end:
 	XRecordFreeData(data);
 }
 
-VInputError Listener_start(Listener *listener, KeyboardCallback callback)
+VInputError EventListener_start(EventListener *listener, KeyboardCallback callback)
 {
 	if (!listener->initialized) return VINPUT_UNINITIALIZED;
-	ListenerInternal *data = listener->data;
+	EventListenerInternal *data = listener->data;
 	data->callback = callback;
 
 	// Start listening for events
@@ -205,10 +207,10 @@ VInputError Listener_start(Listener *listener, KeyboardCallback callback)
 	return VINPUT_OK;
 }
 
-VInputError Listener_free(Listener *listener)
+VInputError EventListener_free(EventListener *listener)
 {
 	if (!listener->initialized) return VINPUT_UNINITIALIZED;
-	ListenerInternal *data = listener->data;
+	EventListenerInternal *data = listener->data;
 
 	if (data) {
 		if (data->dpy_datalink) XCloseDisplay(data->dpy_datalink);
@@ -216,7 +218,7 @@ VInputError Listener_free(Listener *listener)
 		if (data->keyboard_map)
 			XkbFreeClientMap(data->keyboard_map, XkbAllClientInfoMask, true);
 		if (data->dpy) XCloseDisplay(data->dpy);
-		memset(data, 0, sizeof(ListenerInternal));
+		memset(data, 0, sizeof(EventListenerInternal));
 		free(data);
 	}
 

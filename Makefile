@@ -1,4 +1,4 @@
-CFLAGS = -Wall -Wextra -O0 -ggdb #-O3
+CFLAGS = -I. -Wall -Wextra -O0 -ggdb #-O3
 
 # Linux/X11
 libvinput.so: libvinput.c linux_emu.c linux.c

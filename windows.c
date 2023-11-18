@@ -7,11 +7,11 @@
 
 // FIXME: Make this thread-safe!
 
-typedef struct _ListenerInternal
+typedef struct _EventListenerInternal
 {
 	HINSTANCE exe;
 	HHOOK key_hook;
-} ListenerInternal;
+} EventListenerInternal;
 
 DWORD tls_index; // Thread-Local Storage
 
@@ -61,10 +61,10 @@ LRESULT CALLBACK keyboard_callback(int code, WPARAM wparam, LPARAM lparam)
 	return 0;
 }
 
-VInputError _Listener_init(Listener *listener)
+VInputError _Listener_init(EventListener *listener)
 {
-	listener->data = malloc(sizeof(ListenerInternal));
-	ListenerInternal *data = listener->data;
+	listener->data = malloc(sizeof(EventListenerInternal));
+	EventListenerInternal *data = listener->data;
 
 	// Get module handle
 	data->exe = GetModuleHandle(NULL);
@@ -86,10 +86,9 @@ VInputError _Listener_init(Listener *listener)
 	return VINPUT_OK;
 }
 
-VInputError Listener_start(Listener *listener, KeyboardCallback callback)
+VInputError EventListener_start(EventListener *listener, KeyboardCallback callback)
 {
 	if (!listener->initialized) return VINPUT_UNINITIALIZED;
-	ListenerInternal *data = listener->data;
 
 	TlsSetValue(tls_index, callback);
 
@@ -103,13 +102,13 @@ VInputError Listener_start(Listener *listener, KeyboardCallback callback)
 	return VINPUT_OK;
 }
 
-VInputError Listener_free(Listener *listener)
+VInputError EventListener_free(EventListener *listener)
 {
 	if (!listener->initialized) return VINPUT_UNINITIALIZED;
-	ListenerInternal *data = listener->data;
+	EventListenerInternal *data = listener->data;
 
 	UnhookWindowsHookEx(data->key_hook);
-	memset(data, 0, sizeof(ListenerInternal));
+	memset(data, 0, sizeof(EventListenerInternal));
 
 	TlsFree(tls_index);
 

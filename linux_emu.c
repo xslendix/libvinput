@@ -14,16 +14,16 @@
 
 #include <xdo.h>
 
-typedef struct _EmulatorInternal
+typedef struct _EventEmulatorInternal
 {
 	Display *dpy;
 	xdo_t *xdo;
-} EmulatorInternal;
+} EventEmulatorInternal;
 
-VInputError _Emulator_init(Emulator *emulator)
+VInputError _Emulator_init(EventEmulator *emulator)
 {
-	emulator->data = malloc(sizeof(EmulatorInternal));
-	EmulatorInternal *data = emulator->data;
+	emulator->data = malloc(sizeof(EventEmulatorInternal));
+	EventEmulatorInternal *data = emulator->data;
 
 	data->dpy = XOpenDisplay(NULL);
 	if (!data->dpy) return VINPUT_X11_DISPLAY;
@@ -39,10 +39,11 @@ VInputError _Emulator_init(Emulator *emulator)
 	return VINPUT_OK;
 }
 
-VInputError Emulator_keyboard_state_get(Emulator *emulator, int **state, int *nstate)
+VInputError EventEmulator_keyboard_state_get(
+    EventEmulator *emulator, int **state, int *nstate)
 {
 	if (!emulator->initialized) return VINPUT_UNINITIALIZED;
-	EmulatorInternal *data = emulator->data;
+	EventEmulatorInternal *data = emulator->data;
 
 	xdo_get_active_modifiers(data->xdo, (charcodemap_t **)state, nstate);
 
@@ -50,33 +51,34 @@ VInputError Emulator_keyboard_state_get(Emulator *emulator, int **state, int *ns
 }
 
 #include <stdio.h>
-VInputError Emulator_keyboard_state_clear(Emulator *emulator)
+VInputError EventEmulator_keyboard_state_clear(EventEmulator *emulator)
 {
 	if (!emulator->initialized) return VINPUT_UNINITIALIZED;
-	EmulatorInternal *data = emulator->data;
+	EventEmulatorInternal *data = emulator->data;
 
 	charcodemap_t *active_mods = NULL;
 	int active_mods_len;
-	Emulator_keyboard_state_get(emulator, (void *)&active_mods, &active_mods_len);
+	EventEmulator_keyboard_state_get(emulator, (void *)&active_mods, &active_mods_len);
 	xdo_clear_active_modifiers(data->xdo, 0, active_mods, active_mods_len);
 
 	return VINPUT_OK;
 }
 
-VInputError Emulator_keyboard_state_set(Emulator *emulator, int *state, int nstate)
+VInputError EventEmulator_keyboard_state_set(
+    EventEmulator *emulator, int *state, int nstate)
 {
 	if (!emulator->initialized) return VINPUT_UNINITIALIZED;
-	EmulatorInternal *data = emulator->data;
+	EventEmulatorInternal *data = emulator->data;
 
 	xdo_set_active_modifiers(data->xdo, 0, (charcodemap_t *)state, nstate);
 
 	return VINPUT_OK;
 }
 
-VInputError Emulator_press(Emulator *emulator, uint16_t keysym)
+VInputError EventEmulator_press(EventEmulator *emulator, uint16_t keysym)
 {
 	if (!emulator->initialized) return VINPUT_UNINITIALIZED;
-	EmulatorInternal *data = emulator->data;
+	EventEmulatorInternal *data = emulator->data;
 
 	unsigned int keycode = XKeysymToKeycode(data->dpy, keysym);
 	if (keycode) XTestFakeKeyEvent(data->dpy, keycode, True, 0);
@@ -85,10 +87,10 @@ VInputError Emulator_press(Emulator *emulator, uint16_t keysym)
 	return VINPUT_OK;
 }
 
-VInputError Emulator_release(Emulator *emulator, uint16_t keysym)
+VInputError EventEmulator_release(EventEmulator *emulator, uint16_t keysym)
 {
 	if (!emulator->initialized) return VINPUT_UNINITIALIZED;
-	EmulatorInternal *data = emulator->data;
+	EventEmulatorInternal *data = emulator->data;
 
 	unsigned int keycode = XKeysymToKeycode(data->dpy, keysym);
 	if (keycode) XTestFakeKeyEvent(data->dpy, keycode, False, 0);
@@ -97,11 +99,11 @@ VInputError Emulator_release(Emulator *emulator, uint16_t keysym)
 	return VINPUT_OK;
 }
 
-VInputError Emulator_typec(Emulator *emulator, char ch)
+VInputError EventEmulator_typec(EventEmulator *emulator, char ch)
 {
 	if (!ch) return VINPUT_OK;
 	if (!emulator->initialized) return VINPUT_UNINITIALIZED;
-	EmulatorInternal *data = emulator->data;
+	EventEmulatorInternal *data = emulator->data;
 
 	// Keysyms are ASCII compatible
 	char keysym = XKeysymToKeycode(data->dpy, ch);
@@ -111,11 +113,11 @@ VInputError Emulator_typec(Emulator *emulator, char ch)
 	return VINPUT_OK;
 }
 
-VInputError Emulator_types(Emulator *emulator, char *buf, size_t len)
+VInputError EventEmulator_types(EventEmulator *emulator, char *buf, size_t len)
 {
 	if (!buf || !len) return VINPUT_OK;
 	if (!emulator->initialized) return VINPUT_UNINITIALIZED;
-	EmulatorInternal *data = emulator->data;
+	EventEmulatorInternal *data = emulator->data;
 
 	for (size_t i = 0; i < len && buf[i]; i++) {
 		// Keysyms are ASCII compatible
@@ -128,14 +130,14 @@ VInputError Emulator_types(Emulator *emulator, char *buf, size_t len)
 	return VINPUT_OK;
 }
 
-VInputError Emulator_free(Emulator *emulator)
+VInputError EventEmulator_free(EventEmulator *emulator)
 {
 	if (!emulator->initialized) return VINPUT_UNINITIALIZED;
-	EmulatorInternal *data = emulator->data;
+	EventEmulatorInternal *data = emulator->data;
 
 	xdo_free(data->xdo);
 	XCloseDisplay(data->dpy);
-	memset(emulator, 0, sizeof(Emulator));
+	memset(emulator, 0, sizeof(EventEmulator));
 
 	return VINPUT_OK;
 }

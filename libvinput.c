@@ -1,7 +1,7 @@
 #include "libvinput.h"
 
-extern VInputError _Listener_init(Listener *);
-extern VInputError _Emulator_init(Emulator *);
+extern VInputError _Listener_init(EventListener *);
+extern VInputError _Emulator_init(EventEmulator *);
 
 bool VInput_modifier_pressed_except_shift(KeyboardModifiers modifiers)
 {
@@ -33,13 +33,13 @@ char const *VInput_error_get_message(VInputError error)
 	return "Unknown error code";
 }
 
-VInputError Listener_create(Listener *listener, bool listen_keyboard)
+VInputError EventListener_create(EventListener *listener, bool listen_keyboard)
 {
 	listener->listen_keyboard = listen_keyboard;
 	return _Listener_init(listener);
 }
 
-VInputError Emulator_create(Emulator *emulator)
+VInputError EventEmulator_create(EventEmulator *emulator)
 {
 	return _Emulator_init(emulator);
 }

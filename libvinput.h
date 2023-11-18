@@ -1,6 +1,9 @@
 #ifndef LIBVINPUT_H
 #define LIBVINPUT_H
 
+// If you wish to use the old names, you need to define "#define LIBVINPUT_OLD_NAMES"
+// before including this header.
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -9,8 +12,7 @@ extern "C" {
 #include <stddef.h>
 #include <stdint.h>
 
-// Modifiers on the keyboard
-// Currently, only used by the Listener.
+// Currently, only used by the EventListener.
 typedef struct _KeyboardModifiers
 {
 	bool left_control : 1;
@@ -27,33 +29,30 @@ typedef struct _KeyboardModifiers
 	bool right_hyper : 1;
 } KeyboardModifiers;
 
-// A keyboard event
 typedef struct _KeyboardEvent
 {
-	bool pressed;     // Whether or not a key has been pressed or released
-	char keychar;     // The ASCII character of the key, 0 if unavailable
-	uint16_t keycode; // The scan code of the key
-	uint16_t keysym;  // On X11, the KeySym, on windows, the Virtual Key code
+	bool pressed;
+	char keychar; // The ASCII character of the key, 0 if unavailable
+	uint16_t keycode;
+	uint16_t keysym; // On X11, the KeySym, on windows, the Virtual Key code
 
 	KeyboardModifiers modifiers;
 
 	size_t timestamp; // Timestamp of event, in milliseconds
 } KeyboardEvent;
 
-// Listener for events
-typedef struct _Listener
+typedef struct _EventListener
 {
-	bool listen_keyboard; // Whether or not to listen for keyboard events
-	bool initialized;     // Whether or not the listener is initialized
-	void *data;           // Internal data, do not use
-} Listener;
+	bool listen_keyboard;
+	bool initialized;
+	void *data; // Internal data, do not use
+} EventListener;
 
-// Emulator for events
-typedef struct _Emulator
+typedef struct _EventEmulator
 {
-	bool initialized; // Whether or not the listener is initialized
-	void *data;       // Internal data, do not use
-} Emulator;
+	bool initialized;
+	void *data; // Internal data, do not use
+} EventEmulator;
 
 typedef enum _VInputError
 {
@@ -82,37 +81,56 @@ typedef enum _VInputError
 
 typedef void (*KeyboardCallback)(KeyboardEvent);
 
-// Check if any modifier has been pressed except shift
+#ifdef LIBVINPUT_OLD_NAMES
+typedef EventListener Listener;
+typedef EventEmulator Emulator;
+#endif
+
 bool VInput_modifier_pressed_except_shift(KeyboardModifiers modifiers);
 
-// Get the error message as a constant string.
 char const *VInput_error_get_message(VInputError error);
 
-// Create a Listener, does not allocate memory for the listener.
-VInputError Listener_create(Listener *listener, bool listen_keyboard);
+// Create a EventListener, does not allocate memory for the listener.
+VInputError EventListener_create(EventListener *listener, bool listen_keyboard);
 // Make a Listener start listening. This is a blocking call.
-VInputError Listener_start(Listener *listener, KeyboardCallback callback);
+VInputError EventListener_start(EventListener *listener, KeyboardCallback callback);
 // Free up internal data in the Listener.
-VInputError Listener_free(Listener *listener);
+VInputError EventListener_free(EventListener *listener);
 
-// Create an Emulator, does not allocate memory for the emulator.
-VInputError Emulator_create(Emulator *emulator);
+// Create an EventEmulator, does not allocate memory for the emulator.
+VInputError EventEmulator_create(EventEmulator *emulator);
 // Get current keyboard state, modifiers only, allocates memory
-VInputError Emulator_keyboard_state_get(Emulator *emulator, int **state, int *nstate);
+VInputError EventEmulator_keyboard_state_get(
+    EventEmulator *emulator, int **state, int *nstate);
 // Clear current keyboard state, modifiers only
-VInputError Emulator_keyboard_state_clear(Emulator *emulator);
+VInputError EventEmulator_keyboard_state_clear(EventEmulator *emulator);
 // Set current keyboard state, modifiers only, clears current keyboard state
-VInputError Emulator_keyboard_state_set(Emulator *emulator, int *state, int nstate);
-// Press a key.
-VInputError Emulator_press(Emulator *emulator, uint16_t keysym);
-// Release a key.
-VInputError Emulator_release(Emulator *emulator, uint16_t keysym);
+VInputError EventEmulator_keyboard_state_set(
+    EventEmulator *emulator, int *state, int nstate);
+VInputError EventEmulator_press(EventEmulator *emulator, uint16_t keysym);
+VInputError EventEmulator_release(EventEmulator *emulator, uint16_t keysym);
 // Type out an ASCII character.
-VInputError Emulator_typec(Emulator *emulator, char ch);
+VInputError EventEmulator_typec(EventEmulator *emulator, char ch);
 // Type out a string of ASCII characters.
-VInputError Emulator_types(Emulator *emulator, char *buf, size_t len);
+VInputError EventEmulator_types(EventEmulator *emulator, char *buf, size_t len);
 // Free up internal data in the Emulator.
-VInputError Emulator_free(Emulator *emulator);
+VInputError EventEmulator_free(EventEmulator *emulator);
+
+#ifdef LIBVINPUT_OLD_NAMES
+#	define Listener_create EventListener_create
+#	define Listener_start EventListener_start
+#	define Listener_free EventListener_free
+
+#	define Emulator_create EventEmulator_create
+#	define Emulator_keyboard_state_get EventEmulator_keyboard_state_get
+#	define Emulator_keyboard_state_clear EventEmulator_keyboard_state_clear
+#	define Emulator_keyboard_state_set EventEmulator_keyboard_state_set
+#	define Emulator_press EventEmulator_press
+#	define Emulator_release EventEmulator_release
+#	define Emulator_typec EventEmulator_typec
+#	define Emulator_types EventEmulator_types
+#	define Emulator_free EventEmulator_free
+#endif
 
 #ifdef __cplusplus
 }
