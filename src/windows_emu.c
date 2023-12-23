@@ -14,7 +14,7 @@ BYTE const modifiers[] = {
 };
 #define MODIFIERS_SIZE 6
 
-VInputError _Emulator_init(EventEmulator *emulator)
+VInputError _EventEmulator_init(EventEmulator *emulator)
 {
 	emulator->initialized = true;
 

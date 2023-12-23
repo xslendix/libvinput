@@ -61,7 +61,7 @@ LRESULT CALLBACK keyboard_callback(int code, WPARAM wparam, LPARAM lparam)
 	return 0;
 }
 
-VInputError _Listener_init(EventListener *listener)
+VInputError _EventListener_init(EventListener *listener)
 {
 	listener->data = malloc(sizeof(EventListenerInternal));
 	EventListenerInternal *data = listener->data;

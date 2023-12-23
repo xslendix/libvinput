@@ -24,7 +24,7 @@ typedef struct _EventListenerInternal
 	KeyboardModifiers modifiers;
 } EventListenerInternal;
 
-VInputError _Listener_init(EventListener *listener)
+VInputError _EventListener_init(EventListener *listener)
 {
 	listener->data = malloc(sizeof(EventListenerInternal));
 	EventListenerInternal *data = listener->data;
@@ -185,11 +185,9 @@ KeyboardEvent xevent_to_key_event(
 void xrecord_callback(XPointer incoming, XRecordInterceptData *data)
 {
 	EventListenerInternal *data_ = (EventListenerInternal *)incoming;
-	if (data->category != XRecordFromServer) goto xrecord_callback_end;
+	if (data->category == XRecordFromServer)
+		data_->callback(xevent_to_key_event(data_, data));
 
-	data_->callback(xevent_to_key_event(data_, data));
-
-xrecord_callback_end:
 	XRecordFreeData(data);
 }
 
@@ -213,6 +211,7 @@ VInputError EventListener_free(EventListener *listener)
 	EventListenerInternal *data = listener->data;
 
 	if (data) {
+		if (data->context) XRecordDisableContext(data->dpy_datalink, data->context);
 		if (data->dpy_datalink) XCloseDisplay(data->dpy_datalink);
 		if (data->context) XRecordFreeContext(data->dpy, data->context);
 		if (data->keyboard_map)
