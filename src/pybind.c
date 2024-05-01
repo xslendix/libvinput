@@ -40,11 +40,65 @@ typedef struct
 	PyObject_HEAD KeyboardModifiers modifiers;
 } PyKeyboardModifiers;
 
+static PyObject* KeyboardModifiers_get_left_control(PyKeyboardModifiers* self, void* closure) {
+	return PyBool_FromLong(self->modifiers.left_control);
+}
+static PyObject *KeyboardModifiers_get_right_control(PyKeyboardModifiers *self, void *closure) {
+	return PyBool_FromLong(self->modifiers.right_control);
+}
+static PyObject *KeyboardModifiers_get_left_shift(PyKeyboardModifiers *self, void *closure) {
+	return PyBool_FromLong(self->modifiers.left_shift);
+}
+static PyObject *KeyboardModifiers_get_right_shift(PyKeyboardModifiers *self, void *closure) {
+	return PyBool_FromLong(self->modifiers.right_shift);
+}
+static PyObject *KeyboardModifiers_get_left_alt(PyKeyboardModifiers *self, void *closure) {
+	return PyBool_FromLong(self->modifiers.left_alt);
+}
+static PyObject *KeyboardModifiers_get_right_alt(PyKeyboardModifiers *self, void *closure) {
+	return PyBool_FromLong(self->modifiers.right_alt);
+}
+static PyObject *KeyboardModifiers_get_left_meta(PyKeyboardModifiers *self, void *closure) {
+	return PyBool_FromLong(self->modifiers.left_meta);
+}
+static PyObject *KeyboardModifiers_get_right_meta(PyKeyboardModifiers *self, void *closure) {
+	return PyBool_FromLong(self->modifiers.right_meta);
+}
+static PyObject *KeyboardModifiers_get_left_super(PyKeyboardModifiers *self, void *closure) {
+	return PyBool_FromLong(self->modifiers.left_super);
+}
+static PyObject *KeyboardModifiers_get_right_super(PyKeyboardModifiers *self, void *closure) {
+	return PyBool_FromLong(self->modifiers.right_super);
+}
+static PyObject *KeyboardModifiers_get_left_hyper(PyKeyboardModifiers *self, void *closure) {
+	return PyBool_FromLong(self->modifiers.left_hyper);
+}
+static PyObject *KeyboardModifiers_get_right_hyper(PyKeyboardModifiers *self, void *closure) {
+	return PyBool_FromLong(self->modifiers.right_hyper);
+}
+
+static PyGetSetDef KeyboardModifiers_getsetters[] = {
+	{"left_control", (getter)KeyboardModifiers_get_left_control, NULL, "left_control modifier status", NULL},
+	{"right_control", (getter)KeyboardModifiers_get_right_control, NULL, "right_control modifier status", NULL},
+	{"left_shift", (getter)KeyboardModifiers_get_left_shift, NULL, "left_shift modifier status", NULL},
+	{"right_shift", (getter)KeyboardModifiers_get_right_shift, NULL, "right_shift modifier status", NULL},
+	{"left_alt", (getter)KeyboardModifiers_get_left_alt, NULL, "left_alt modifier status", NULL},
+	{"right_alt", (getter)KeyboardModifiers_get_right_alt, NULL, "right_alt modifier status", NULL},
+	{"left_meta", (getter)KeyboardModifiers_get_left_meta, NULL, "left_meta modifier status", NULL},
+	{"right_meta", (getter)KeyboardModifiers_get_right_meta, NULL, "right_meta modifier status", NULL},
+	{"left_super", (getter)KeyboardModifiers_get_left_super, NULL, "left_super modifier status", NULL},
+	{"right_super", (getter)KeyboardModifiers_get_right_super, NULL, "right_super modifier status", NULL},
+	{"left_hyper", (getter)KeyboardModifiers_get_left_hyper, NULL, "left_hyper modifier status", NULL},
+	{"right_hyper", (getter)KeyboardModifiers_get_right_hyper, NULL, "right_hyper modifier status", NULL},
+	{NULL}  /* Sentinel */
+};
+
 static PyTypeObject PyKeyboardModifiersType = {
 	PyVarObject_HEAD_INIT(NULL, 0).tp_name = "libvinput.KeyboardModifiers",
 	.tp_basicsize = sizeof(PyKeyboardModifiers),
 	.tp_flags = Py_TPFLAGS_DEFAULT,
 	.tp_new = PyType_GenericNew,
+	.tp_getset = KeyboardModifiers_getsetters,
 };
 
 typedef struct
@@ -53,11 +107,42 @@ typedef struct
 	PyKeyboardModifiers *modifiers;
 } PyKeyboardEvent;
 
+static PyObject* KeyboardEvent_get_pressed(PyKeyboardEvent* self, void* closure) {
+	return PyBool_FromLong(self->event.pressed);
+}
+static PyObject* KeyboardEvent_get_keychar(PyKeyboardEvent* self, void* closure) {
+	return PyUnicode_FromStringAndSize(&self->event.keychar, 1);
+}
+static PyObject* KeyboardEvent_get_keycode(PyKeyboardEvent* self, void* closure) {
+	return PyLong_FromUnsignedLong(self->event.keycode);
+}
+static PyObject* KeyboardEvent_get_keysym(PyKeyboardEvent* self, void* closure) {
+	return PyLong_FromUnsignedLong(self->event.keysym);
+}
+static PyObject* KeyboardEvent_get_modifiers(PyKeyboardEvent* self, void* closure) {
+	Py_INCREF(self->modifiers);
+	return (PyObject*)self->modifiers;
+}
+static PyObject* KeyboardEvent_get_timestamp(PyKeyboardEvent* self, void* closure) {
+	return PyLong_FromSize_t(self->event.timestamp);
+}
+
+static PyGetSetDef KeyboardEvent_getsetters[] = {
+	{"pressed", (getter)KeyboardEvent_get_pressed, NULL, "Key pressed status", NULL},
+	{"keychar", (getter)KeyboardEvent_get_keychar, NULL, "ASCII character of the key", NULL},
+	{"keycode", (getter)KeyboardEvent_get_keycode, NULL, "Key code value", NULL},
+	{"keysym", (getter)KeyboardEvent_get_keysym, NULL, "Key symbol on X11 or virtual key code on Windows", NULL},
+	{"modifiers", (getter)KeyboardEvent_get_modifiers, NULL, "Keyboard modifiers active during the event", NULL},
+	{"timestamp", (getter)KeyboardEvent_get_timestamp, NULL, "Timestamp of the event in milliseconds", NULL},
+	{NULL}  // Sentinel
+};
+
 static PyTypeObject PyKeyboardEventType = {
 	PyVarObject_HEAD_INIT(NULL, 0).tp_name = "libvinput.KeyboardEvent",
 	.tp_basicsize = sizeof(PyKeyboardEvent),
 	.tp_flags = Py_TPFLAGS_DEFAULT,
 	.tp_new = PyType_GenericNew,
+	.tp_getset = KeyboardEvent_getsetters,
 };
 
 PyObject *KeyboardEvent_to_PyObject(KeyboardEvent *event)
