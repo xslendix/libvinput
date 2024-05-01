@@ -1,6 +1,11 @@
 libvinput.dll
-test
-test.exe
 libvinput.so
+libvinput.dylib
 wordlogger
 wordlogger.exe
+wordlogger_mac
+*.dSYM
+meta
+dist
+build
+*.egg-info
