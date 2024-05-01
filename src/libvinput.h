@@ -77,6 +77,10 @@ typedef enum _VInputError
 	VINPUT_X11_ENABLE_XRECORD,
 
 	VINPUT_XDO_NEW,
+
+	// MACOS
+	VINPUT_MAC_TAP,
+
 } VInputError;
 
 typedef void (*KeyboardCallback)(KeyboardEvent);

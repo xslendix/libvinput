@@ -9,7 +9,7 @@ wordlogger: wordlogger.c
 
 # MacOS
 libvinput.dylib: src/libvinput.c src/macos_emu.c src/macos.c
-	$(CC) $(CFLAGS) -fPIC -o $@ -shared $^
+	$(CC) $(CFLAGS) -fPIC -framework ApplicationServices -framework Carbon -o $@ -shared $^
 
 wordlogger_mac: wordlogger.c
 	$(CC) $(CFLAGS) wordlogger.c -o $@ -Isrc -L. -lvinput -Wl,-rpath,@loader_path/.

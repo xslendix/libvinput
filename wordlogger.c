@@ -25,9 +25,9 @@ void keyboard_callback(KeyboardEvent evt)
 		return;
 	}
 
-	if (!isprint(evt.keychar) && !isspace(evt.keychar)) return;
+	if (!isprint(evt.keychar)) return;
 
-	if (!isalpha(evt.keychar)
+	if (!isalpha(evt.keychar) || isspace(evt.keychar)
 	    || VInput_modifier_pressed_except_shift(evt.modifiers)) { // New word
 		if (g_word_len) printf("Word introduced: %.*s\n", g_word_len, g_word_buffer);
 		g_word_len = 0;

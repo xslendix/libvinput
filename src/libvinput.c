@@ -29,6 +29,7 @@ char const *VInput_error_get_message(VInputError error)
 	case VINPUT_X11_DISPLAY_DATALINK: return "Failed to open datalink X11 display";
 	case VINPUT_X11_ENABLE_XRECORD: return "Failed to enable XRecord context";
 	case VINPUT_XDO_NEW: return "Failed to create xdo instance";
+	case VINPUT_MAC_TAP: return "Cannot craete event tap";
 	}
 	return "Unknown error code";
 }
