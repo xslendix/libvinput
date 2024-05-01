@@ -1,5 +1,5 @@
-libvinput
-=========
+![libvinput banner](meta/libvinput.png)
+
 
 Cross-platform, simple C keyboard hook and emulator with mouse support in the
 works.
