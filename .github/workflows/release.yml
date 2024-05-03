@@ -1,0 +1,53 @@
+name: Build + Release Wheels
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_to_testpypi:
+        description: "Whether the build should be deployed to test.pypi.org instead of regular PyPI"
+        required: true
+        default: false
+
+jobs:
+  build-and-release:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            build_command: make libvinput.so
+            artifact_name: libvinput.so
+          - os: windows-latest
+            build_command: make libvinput.dll
+            artifact_name: libvinput.dll
+          - os: macos-latest
+            build_command: make libvinput.dylib
+            artifact_name: libvinput.dylib
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      - name: Build native binary
+        run: |
+          ${{ matrix.build_command }}
+      - name: Build wheel
+        run: |
+          pip install build
+          python -m build --wheel
+      - uses: actions/upload-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist
+      - name: Upload to PyPI
+        if: github.event.inputs.deploy_to_testpypi == 'false'
+        uses: pypa/gh-action-pypi-publish@v1.8.14
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+      - name: Upload to TestPyPI
+        if: github.event.inputs.deploy_to_testpypi == 'true'
+        uses: pypa/gh-action-pypi-publish@v1.8.14
+        with:
+          repository_url: 'https://test.pypi.org/legacy/'
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
