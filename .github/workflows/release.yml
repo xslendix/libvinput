@@ -12,23 +12,25 @@ jobs:
   build-and-release:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
-            build_command: make libvinput.so
-            artifact_name: libvinput.so
           - os: windows-latest
-            build_command: make libvinput.dll
-            artifact_name: libvinput.dll
+            build_command: make vinput.lib
+            artifact_name: vinput.lib
+            extra_setup: echo "No extra setup needed"
           - os: macos-latest
             build_command: make libvinput.dylib
             artifact_name: libvinput.dylib
+            extra_setup: echo "No extra setup needed"
     steps:
       - uses: actions/checkout@v4
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.9'
+      - name: Setup Dependencies
+        run: ${{ matrix.extra_setup }}
       - name: Build native binary
         run: |
           ${{ matrix.build_command }}
@@ -38,16 +40,19 @@ jobs:
           python -m build --wheel
       - uses: actions/upload-artifact@v4
         with:
-          name: python-package-distributions
+          name: python-package-distributions-${{ matrix.os }}
           path: dist
+      - name: Install Twine
+        run: pip install twine
+
       - name: Upload to PyPI
         if: github.event.inputs.deploy_to_testpypi == 'false'
-        uses: pypa/gh-action-pypi-publish@v1.8.14
-        with:
-          password: ${{ secrets.PYPI_API_TOKEN }}
+        run: twine upload dist/* --verbose --skip-existing -u __token__ -p ${{ secrets.PYPI_API_TOKEN }}
+        env:
+          TWINE_REPOSITORY_URL: https://upload.pypi.org/legacy/
+
       - name: Upload to TestPyPI
         if: github.event.inputs.deploy_to_testpypi == 'true'
-        uses: pypa/gh-action-pypi-publish@v1.8.14
-        with:
-          repository_url: 'https://test.pypi.org/legacy/'
-          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+        run: twine upload dist/* --verbose --skip-existing -u __token__ -p ${{ secrets.TEST_PYPI_API_TOKEN }}
+        env:
+          TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/

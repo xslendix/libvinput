@@ -18,6 +18,12 @@ wordlogger_mac: wordlogger.c
 libvinput.dll: src/libvinput.c src/windows_emu.c src/windows.c
 	x86_64-w64-mingw32-gcc $(CFLAGS) -fPIC -o $@ -shared $^
 
+vinput.lib: src/libvinput.c src/windows_emu.c src/windows.c
+	x86_64-w64-mingw32-gcc $(CFLAGS) -c src/libvinput.c -o libvinput.o
+	x86_64-w64-mingw32-gcc $(CFLAGS) -c src/windows_emu.c -o windows_emu.o
+	x86_64-w64-mingw32-gcc $(CFLAGS) -c src/windows.c -o windows.o
+	ar rcs vinput.lib libvinput.o windows_emu.o windows.o
+
 wordlogger.exe: libvinput.dll wordlogger.c
 	x86_64-w64-mingw32-gcc $(CFLAGS) wordlogger.c -o $@ -L. -l:$<
 
