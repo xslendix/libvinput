@@ -2,7 +2,7 @@ CFLAGS = -I. -Wall -Wextra -O0 -ggdb #-O3
 
 # Linux/X11
 libvinput.so: src/libvinput.c src/linux_emu.c src/linux.c
-	$(CC) $(CFLAGS) -fPIC -o $@ -shared $^
+	$(CC) $(CFLAGS) -fPIC -o $@ -shared $^ -lX11 -lXtst -I/usr/local/include -L/usr/local/lib -lxdo
 
 wordlogger: wordlogger.c
 	$(CC) $(CFLAGS) wordlogger.c -o $@ -L. -lvinput -lX11 -lXtst -I/usr/local/include -L/usr/local/lib -lxdo
