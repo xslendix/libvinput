@@ -155,10 +155,11 @@ VInputError EventListener_free(EventListener *listener)
 	if (!listener->initialized) return VINPUT_UNINITIALIZED;
 	EventListenerInternal *internal = (EventListenerInternal *)listener->data;
 	if (internal) {
-		CFMachPortInvalidate(internal->eventTap);
-		CFRunLoopSourceInvalidate(internal->runLoopSource);
-		CFRelease(internal->eventTap);
-		CFRelease(internal->runLoopSource);
+		printf("%p\n", internal->eventTap);
+		if (internal->eventTap) CFMachPortInvalidate(internal->eventTap);
+		if (internal->runLoopSource) CFRunLoopSourceInvalidate(internal->runLoopSource);
+		if (internal->eventTap) CFRelease(internal->eventTap);
+		if (internal->runLoopSource) CFRelease(internal->runLoopSource);
 		free(internal);
 	}
 	listener->initialized = false;
