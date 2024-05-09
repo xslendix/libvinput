@@ -14,34 +14,46 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: windows-latest
-            build_command: make vinput.lib
-            artifact_name: vinput.lib
-            extra_setup: echo "No extra setup needed"
-          - os: macos-latest
-            build_command: make libvinput.dylib
-            artifact_name: libvinput.dylib
-            extra_setup: echo "No extra setup needed"
+        os: [windows-latest, macos-latest]
+        python-version: ['3.8', '3.9', '3.10', '3.11']
     steps:
       - uses: actions/checkout@v4
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
-      - name: Setup Dependencies
-        run: ${{ matrix.extra_setup }}
-      - name: Build native binary
-        run: |
-          ${{ matrix.build_command }}
+          python-version: ${{ matrix.python-version }}
+      
+      - name: Setup Dependencies (Windows)
+        if: runner.os == 'Windows'
+        run: echo "No extra setup needed for Windows"
+        shell: bash
+      
+      - name: Setup Dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: echo "No extra setup needed for macOS"
+        shell: bash
+      
+      - name: Build native binary (Windows)
+        if: runner.os == 'Windows'
+        run: make vinput.lib
+        shell: bash
+      
+      - name: Build native binary (macOS)
+        if: runner.os == 'macOS'
+        run: make libvinput.dylib
+        shell: bash
+      
       - name: Build wheel
         run: |
           pip install build
           python -m build --wheel
+      
       - uses: actions/upload-artifact@v4
         with:
-          name: python-package-distributions-${{ matrix.os }}
+          name: python-package-distributions-${{ matrix.os }}-py${{ matrix.python-version }}
           path: dist
+      
       - name: Install Twine
         run: pip install twine
 
