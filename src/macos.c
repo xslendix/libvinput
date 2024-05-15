@@ -86,15 +86,40 @@ CGEventRef CGEventCallback(
 	EventListener *listener = (EventListener *)refcon;
 	if (!listener->initialized) return event;
 
+	static KeyboardModifiers mods = { 0 };
+
 	KeyboardEvent kevent = { 0 };
-	kevent.modifiers = (KeyboardModifiers) { 0 };
+	kevent.modifiers = mods;
 	kevent.keycode = (uint16_t)CGEventGetIntegerValueField(event, kCGKeyboardEventKeycode);
 	kevent.timestamp = (size_t)(CGEventGetTimestamp(event) / 1000000);
 
-	if (type == kCGEventKeyDown || type == kCGEventKeyUp) {
+	if (type == kCGEventKeyDown || type == kCGEventKeyUp || type == kCGEventFlagsChanged) {
 		kevent.pressed = (type == kCGEventKeyDown);
 
 		CGEventFlags flags = CGEventGetFlags(event);
+
+		// Update modifiers
+		if (mods.left_shift != (flags & kCGEventFlagMaskShift) != 0)
+			mods.left_shift = (flags & kCGEventFlagMaskShift) != 0;
+		if (mods.right_shift != (flags & kCGEventFlagMaskShift) != 0)
+			mods.right_shift = (flags & kCGEventFlagMaskShift) != 0;
+		if (mods.left_control != (flags & kCGEventFlagMaskControl) != 0)
+			mods.left_control = (flags & kCGEventFlagMaskControl) != 0;
+		if (mods.right_control != (flags & kCGEventFlagMaskControl) != 0)
+			mods.right_control = (flags & kCGEventFlagMaskControl) != 0;
+		if (mods.left_alt != (flags & kCGEventFlagMaskAlternate) != 0)
+			mods.left_alt = (flags & kCGEventFlagMaskAlternate) != 0;
+		if (mods.right_alt != (flags & kCGEventFlagMaskAlternate) != 0)
+			mods.right_alt = (flags & kCGEventFlagMaskAlternate) != 0;
+		if (mods.left_meta != (flags & kCGEventFlagMaskCommand) != 0)
+			mods.left_meta = (flags & kCGEventFlagMaskCommand) != 0;
+		if (mods.right_meta != (flags & kCGEventFlagMaskCommand) != 0)
+			mods.right_meta = (flags & kCGEventFlagMaskCommand) != 0;
+		if (mods.left_super != (flags & kCGEventFlagMaskSecondaryFn) != 0)
+			mods.left_super = (flags & kCGEventFlagMaskSecondaryFn) != 0;
+		if (mods.right_super != (flags & kCGEventFlagMaskSecondaryFn) != 0)
+			mods.right_super = (flags & kCGEventFlagMaskSecondaryFn) != 0;
+
 		bool shift = (flags & kCGEventFlagMaskShift) != 0;
 		bool caps = (flags & kCGEventFlagMaskAlphaShift) != 0;
 
@@ -115,7 +140,8 @@ VInputError _EventListener_init(EventListener *listener)
 	if (!listener) return VINPUT_UNINITIALIZED;
 	listener->initialized = true;
 
-	CGEventMask eventMask = CGEventMaskBit(kCGEventKeyDown) | CGEventMaskBit(kCGEventKeyUp);
+	CGEventMask eventMask = CGEventMaskBit(kCGEventKeyDown) | CGEventMaskBit(kCGEventKeyUp)
+	                        | CGEventMaskBit(kCGEventFlagsChanged);
 	CFMachPortRef eventTap = CGEventTapCreate(
 	    kCGSessionEventTap, kCGHeadInsertEventTap, 0, eventMask, CGEventCallback, listener);
 

@@ -19,12 +19,12 @@ typedef struct _KeyboardModifiers
 	bool right_control : 1;
 	bool left_shift : 1;
 	bool right_shift : 1;
-	bool left_alt : 1;
-	bool right_alt : 1;
-	bool left_meta : 1;
-	bool right_meta : 1;
-	bool left_super : 1;
-	bool right_super : 1;
+	bool left_alt : 1;    // On Mac, this is the Option key
+	bool right_alt : 1;   // On Mac, this is the Option key
+	bool left_meta : 1;   // On Mac, this is the Command key
+	bool right_meta : 1;  // On Mac, this is the Command key
+	bool left_super : 1;  // On Mac, this is the Fn key
+	bool right_super : 1; // On Mac, this is the Fn key
 	bool left_hyper : 1;
 	bool right_hyper : 1;
 } KeyboardModifiers;
