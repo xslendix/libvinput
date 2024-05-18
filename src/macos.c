@@ -168,7 +168,8 @@ VInputError _EventListener_init(EventListener *listener)
 	return VINPUT_OK;
 }
 
-VInputError EventListener_start(EventListener *listener, KeyboardCallback callback)
+VInputError EventListener2_start(EventListener *listener, KeyboardCallback callback,
+    MouseButtonCallback button_callaback, MouseMoveCallback move_callback)
 {
 	if (!listener->listen_keyboard || !callback) return VINPUT_UNINITIALIZED;
 	listener->data = callback;

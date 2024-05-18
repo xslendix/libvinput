@@ -36,7 +36,20 @@ char const *VInput_error_get_message(VInputError error)
 
 VInputError EventListener_create(EventListener *listener, bool listen_keyboard)
 {
+	return EventListener2_create(listener, listen_keyboard, false, false);
+}
+
+VInputError EventListener_start(EventListener *listener, KeyboardCallback callback)
+{
+	return EventListener2_start(listener, callback, NULL, NULL);
+}
+
+VInputError EventListener2_create(EventListener *listener, bool listen_keyboard,
+    bool listen_mouse_button, bool listen_mouse_move)
+{
 	listener->listen_keyboard = listen_keyboard;
+	listener->listen_mouse_button = listen_mouse_button;
+	listener->listen_mouse_move = listen_mouse_move;
 	return _EventListener_init(listener);
 }
 

@@ -191,7 +191,8 @@ void xrecord_callback(XPointer incoming, XRecordInterceptData *data)
 	XRecordFreeData(data);
 }
 
-VInputError EventListener_start(EventListener *listener, KeyboardCallback callback)
+VInputError EventListener2_start(EventListener *listener, KeyboardCallback callback,
+    MouseButtonCallback button_callaback, MouseMoveCallback move_callback)
 {
 	if (!listener->initialized) return VINPUT_UNINITIALIZED;
 	EventListenerInternal *data = listener->data;

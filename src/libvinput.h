@@ -41,11 +41,40 @@ typedef struct _KeyboardEvent
 	size_t timestamp; // Timestamp of event, in milliseconds
 } KeyboardEvent;
 
+typedef enum _MouseButton
+{
+	MouseButtonLeft = 0,
+	MouseButtonRight,
+	MouseButtonCenter,
+} MouseButton;
+
+typedef enum _MouseButtonEventKind
+{
+	MouseClickEvent,
+	MousePressEvent,
+	MouseReleaseEvent,
+} MouseButtonEventKind;
+
+typedef struct _MouseButtonEvent
+{
+	MouseButton button;
+	MouseButtonEventKind kind;
+} MouseButtonEvent;
+
+typedef struct _MouseMoveEvent
+{
+	unsigned int x, y;
+	float velocity_x, velocity_y, velocity;
+} MouseMoveEvent;
+
 typedef struct _EventListener
 {
 	bool listen_keyboard;
 	bool initialized;
 	void *data; // Internal data, do not use
+	// V2
+	bool listen_mouse_button;
+	bool listen_mouse_move;
 } EventListener;
 
 typedef struct _EventEmulator
@@ -84,6 +113,8 @@ typedef enum _VInputError
 } VInputError;
 
 typedef void (*KeyboardCallback)(KeyboardEvent);
+typedef void (*MouseButtonCallback)(MouseButtonEvent);
+typedef void (*MouseMoveCallback)(MouseMoveEvent);
 
 #ifdef LIBVINPUT_OLD_NAMES
 typedef EventListener Listener;
@@ -96,8 +127,12 @@ char const *VInput_error_get_message(VInputError error);
 
 // Create a EventListener, does not allocate memory for the listener.
 VInputError EventListener_create(EventListener *listener, bool listen_keyboard);
+VInputError EventListener2_create(EventListener *listener, bool listen_keyboard,
+    bool listen_mouse_button, bool listen_mouse_move);
 // Make a Listener start listening. This is a blocking call.
 VInputError EventListener_start(EventListener *listener, KeyboardCallback callback);
+VInputError EventListener2_start(EventListener *listener, KeyboardCallback callback,
+    MouseButtonCallback button_callaback, MouseMoveCallback move_callback);
 // Free up internal data in the Listener.
 VInputError EventListener_free(EventListener *listener);
 
