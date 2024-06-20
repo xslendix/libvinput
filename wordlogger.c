@@ -31,6 +31,8 @@ void keyboard_callback(KeyboardEvent evt)
 		return;
 	}
 
+	if (evt.keychar == '\n' || evt.keychar == '\r') commit_word();
+
 	if (!isprint(evt.keychar)) return;
 
 	if (!isalpha(evt.keychar) || isspace(evt.keychar)
@@ -44,11 +46,13 @@ void keyboard_callback(KeyboardEvent evt)
 
 void mouse_button_callback(MouseButtonEvent evt)
 {
+	(void)evt;
 	commit_word();
 }
 
 void mouse_move_callback(MouseMoveEvent evt)
 {
+	(void)evt;
 	commit_word();
 }
 
