@@ -45,12 +45,11 @@ typedef enum _MouseButton
 {
 	MouseButtonLeft = 0,
 	MouseButtonRight,
-	MouseButtonCenter,
+	MouseButtonMiddle,
 } MouseButton;
 
 typedef enum _MouseButtonEventKind
 {
-	MouseClickEvent,
 	MousePressEvent,
 	MouseReleaseEvent,
 } MouseButtonEventKind;
@@ -132,7 +131,7 @@ VInputError EventListener2_create(EventListener *listener, bool listen_keyboard,
 // Make a Listener start listening. This is a blocking call.
 VInputError EventListener_start(EventListener *listener, KeyboardCallback callback);
 VInputError EventListener2_start(EventListener *listener, KeyboardCallback callback,
-    MouseButtonCallback button_callaback, MouseMoveCallback move_callback);
+    MouseButtonCallback button_callback, MouseMoveCallback move_callback);
 // Free up internal data in the Listener.
 VInputError EventListener_free(EventListener *listener);
 

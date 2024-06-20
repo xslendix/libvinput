@@ -8,3 +8,7 @@ wordlogger_mac
 dist
 build
 *.egg-info
+.eggs
+compile_commands.json
+*.lib
+*.o

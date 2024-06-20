@@ -25,7 +25,7 @@ vinput.lib: src/libvinput.c src/windows_emu.c src/windows.c
 	ar rcs vinput.lib libvinput.o windows_emu.o windows.o
 
 wordlogger.exe: libvinput.dll wordlogger.c
-	x86_64-w64-mingw32-gcc $(CFLAGS) wordlogger.c -o $@ -L. -l:$<
+	x86_64-w64-mingw32-gcc $(CFLAGS) wordlogger.c -o $@ -L. -Isrc -l:$<
 
 clean:
 	rm -f wordlogger_mac
