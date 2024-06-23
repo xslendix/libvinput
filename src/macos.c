@@ -1,12 +1,17 @@
 #include "libvinput.h"
 
 #include <ApplicationServices/ApplicationServices.h>
+#include <math.h>
 #include <stdlib.h>
 
 typedef struct _EventListenerInternal
 {
 	CFMachPortRef eventTap;
 	CFRunLoopSourceRef runLoopSource;
+
+	KeyboardCallback callback;
+	MouseButtonCallback button_callback;
+	MouseMoveCallback move_callback;
 } EventListenerInternal;
 
 char key_code_to_char(uint16_t keyCode, bool shift, bool caps)
@@ -85,6 +90,7 @@ CGEventRef CGEventCallback(
 {
 	EventListener *listener = (EventListener *)refcon;
 	if (!listener->initialized) return event;
+	EventListenerInternal *data = (EventListenerInternal *)listener->data;
 
 	static KeyboardModifiers mods = { 0 };
 
@@ -127,9 +133,45 @@ CGEventRef CGEventCallback(
 		kevent.keysym = kevent.keycode;
 
 		if (listener->data) {
-			KeyboardCallback callback = (KeyboardCallback)listener->data;
+			KeyboardCallback callback = (KeyboardCallback)data->callback;
 			callback(kevent);
 		}
+	} else if (type == kCGEventLeftMouseDown) {
+		data->button_callback((MouseButtonEvent) {
+		    .button = MouseButtonLeft,
+		    .kind = MousePressEvent,
+		});
+	} else if (type == kCGEventRightMouseDown) {
+		data->button_callback((MouseButtonEvent) {
+		    .button = MouseButtonRight,
+		    .kind = MousePressEvent,
+		});
+	} else if (type == kCGEventLeftMouseUp) {
+		data->button_callback((MouseButtonEvent) {
+		    .button = MouseButtonLeft,
+		    .kind = MouseReleaseEvent,
+		});
+	} else if (type == kCGEventRightMouseUp) {
+		data->button_callback((MouseButtonEvent) {
+		    .button = MouseButtonRight,
+		    .kind = MouseReleaseEvent,
+		});
+	} else if (type == kCGEventMouseMoved) {
+		// FIXME: This is not thread safe!!!
+		static int last_x = 0, last_y = 0;
+		int pos_x = CGEventGetIntegerValueField(event, kCGMouseEventDeltaX);
+		int pos_y = CGEventGetIntegerValueField(event, kCGMouseEventDeltaY);
+		int velocity_x = pos_x - last_x;
+		int velocity_y = pos_y - last_y;
+
+		CGPoint point = CGEventGetLocation(event);
+		data->move_callback((MouseMoveEvent) {
+		    .x = pos_x,
+		    .y = point.y,
+		    .velocity_x = velocity_x,
+		    .velocity_y = velocity_y,
+		    .velocity = sqrtf(velocity_x * velocity_x + velocity_y * velocity_y),
+		});
 	}
 
 	return event;
@@ -140,8 +182,11 @@ VInputError _EventListener_init(EventListener *listener)
 	if (!listener) return VINPUT_UNINITIALIZED;
 	listener->initialized = true;
 
-	CGEventMask eventMask = CGEventMaskBit(kCGEventKeyDown) | CGEventMaskBit(kCGEventKeyUp)
-	                        | CGEventMaskBit(kCGEventFlagsChanged);
+	CGEventMask eventMask
+	    = CGEventMaskBit(kCGEventKeyDown) | CGEventMaskBit(kCGEventKeyUp)
+	      | CGEventMaskBit(kCGEventLeftMouseDown) | CGEventMaskBit(kCGEventRightMouseDown)
+	      | CGEventMaskBit(kCGEventLeftMouseUp) | CGEventMaskBit(kCGEventRightMouseUp)
+	      | CGEventMaskBit(kCGEventMouseMoved) | CGEventMaskBit(kCGEventFlagsChanged);
 	CFMachPortRef eventTap = CGEventTapCreate(
 	    kCGSessionEventTap, kCGHeadInsertEventTap, 0, eventMask, CGEventCallback, listener);
 
@@ -169,10 +214,13 @@ VInputError _EventListener_init(EventListener *listener)
 }
 
 VInputError EventListener2_start(EventListener *listener, KeyboardCallback callback,
-    MouseButtonCallback button_callaback, MouseMoveCallback move_callback)
+    MouseButtonCallback button_callback, MouseMoveCallback move_callback)
 {
 	if (!listener->listen_keyboard || !callback) return VINPUT_UNINITIALIZED;
-	listener->data = callback;
+	EventListenerInternal *internal = (EventListenerInternal *)listener->data;
+	internal->callback = callback;
+	internal->button_callback = button_callback;
+	internal->move_callback = move_callback;
 	CFRunLoopRun();
 	return VINPUT_OK;
 }
