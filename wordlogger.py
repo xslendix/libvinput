@@ -32,5 +32,12 @@ def cb(evt):
     else:
         word += evt.keychar
 
-libvinput.listener_start(logger, cb)
+def cb_mouse(evt):
+    print('button', evt.button, evt.kind)
+
+def cb_mouse_move(evt):
+    #print('move', evt.x, evt.y, evt.velocity_x, evt.velocity_y, evt.velocity)
+    pass
+
+libvinput.listener_start(logger, cb, cb_mouse, cb_mouse_move)
 

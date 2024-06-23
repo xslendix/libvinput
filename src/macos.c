@@ -159,12 +159,14 @@ CGEventRef CGEventCallback(
 	} else if (type == kCGEventMouseMoved) {
 		// FIXME: This is not thread safe!!!
 		static int last_x = 0, last_y = 0;
-		int pos_x = CGEventGetIntegerValueField(event, kCGMouseEventDeltaX);
-		int pos_y = CGEventGetIntegerValueField(event, kCGMouseEventDeltaY);
+		CGPoint point = CGEventGetLocation(event);
+		int pos_x = point.x;
+		int pos_y = point.y;
 		int velocity_x = pos_x - last_x;
 		int velocity_y = pos_y - last_y;
+		last_x = pos_x;
+		last_y = pos_y;
 
-		CGPoint point = CGEventGetLocation(event);
 		data->move_callback((MouseMoveEvent) {
 		    .x = pos_x,
 		    .y = point.y,
