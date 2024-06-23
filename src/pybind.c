@@ -210,7 +210,94 @@ PyObject *KeyboardEvent_to_PyObject(KeyboardEvent *event)
 
 typedef struct
 {
+	PyObject_HEAD MouseButtonEvent event;
+} PyMouseButtonEvent;
+
+static PyObject *MouseButtonEvent_get_button(PyMouseButtonEvent *self, void *closure) {
+	return PyLong_FromUnsignedLong(self->event.button);
+}
+static PyObject *MouseButtonEvent_get_kind(PyMouseButtonEvent *self, void *closure) {
+	return PyLong_FromUnsignedLong(self->event.kind);
+}
+
+static PyGetSetDef MouseButtonEvent_getsetters[] = {
+	{ "kind", (getter)MouseButtonEvent_get_kind, NULL, "Pressed or released", NULL },
+	{ "button", (getter)MouseButtonEvent_get_button, NULL, "Button value", NULL },
+	{ NULL } // Sentinel
+};
+
+static PyTypeObject PyMouseButtonEventType = {
+	PyVarObject_HEAD_INIT(NULL, 0).tp_name = "libvinput.MouseButtonEvent",
+	.tp_basicsize = sizeof(PyMouseButtonEvent),
+	.tp_flags = Py_TPFLAGS_DEFAULT,
+	.tp_new = PyType_GenericNew,
+	.tp_getset = MouseButtonEvent_getsetters,
+};
+
+PyObject *MouseButtonEvent_to_PyObject(MouseButtonEvent *event)
+{
+	PyMouseButtonEvent *py_event = PyObject_New(PyMouseButtonEvent, &PyMouseButtonEventType);
+	if (!py_event) {
+		PyErr_SetString(PyExc_MemoryError, "Failed to create PyMouseButtonEvent object");
+		return NULL;
+	}
+	py_event->event = *event;
+	return (PyObject *)py_event;
+}
+
+typedef struct
+{
+	PyObject_HEAD MouseMoveEvent event;
+} PyMouseMoveEvent;
+
+static PyObject *MouseMoveEvent_get_x(PyMouseMoveEvent *self, void *closure) {
+	return PyLong_FromUnsignedLong(self->event.x);
+}
+static PyObject *MouseMoveEvent_get_y(PyMouseMoveEvent *self, void *closure) {
+	return PyLong_FromUnsignedLong(self->event.y);
+}
+static PyObject *MouseMoveEvent_get_velocity_x(PyMouseMoveEvent *self, void *closure) {
+	return PyLong_FromUnsignedLong(self->event.velocity_x);
+}
+static PyObject *MouseMoveEvent_get_velocity_y(PyMouseMoveEvent *self, void *closure) {
+	return PyLong_FromUnsignedLong(self->event.velocity_y);
+}
+static PyObject *MouseMoveEvent_get_velocity(PyMouseMoveEvent *self, void *closure) {
+	return PyLong_FromUnsignedLong(self->event.velocity);
+}
+static PyGetSetDef MouseMoveEvent_getsetters[] = {
+	{ "x", (getter)MouseMoveEvent_get_x, NULL, "X position", NULL },
+	{ "y", (getter)MouseMoveEvent_get_y, NULL, "Y position", NULL },
+	{ "velocity_x", (getter)MouseMoveEvent_get_velocity_x, NULL, "X velocity", NULL },
+	{ "velocity_y", (getter)MouseMoveEvent_get_velocity_y, NULL, "Y velocity", NULL },
+	{ "velocity", (getter)MouseMoveEvent_get_velocity, NULL, "Velocity", NULL },
+	{ NULL } // Sentinel
+};
+
+static PyTypeObject PyMouseMoveEventType = {
+	PyVarObject_HEAD_INIT(NULL, 0).tp_name = "libvinput.MouseMoveEvent",
+	.tp_basicsize = sizeof(PyMouseMoveEvent),
+	.tp_flags = Py_TPFLAGS_DEFAULT,
+	.tp_new = PyType_GenericNew,
+	.tp_getset = MouseMoveEvent_getsetters,
+};
+
+PyObject *MouseMoveEvent_to_PyObject(MouseMoveEvent *event)
+{
+	PyMouseMoveEvent *py_event = PyObject_New(PyMouseMoveEvent, &PyMouseMoveEventType);
+	if (!py_event) {
+		PyErr_SetString(PyExc_MemoryError, "Failed to create PyMouseMoveEvent object");
+		return NULL;
+	}
+	py_event->event = *event;
+	return (PyObject *)py_event;
+}
+
+typedef struct
+{
 	PyObject *py_callback;
+	PyObject *py_callback_mouse_button;
+	PyObject *py_callback_mouse_move;
 } CallbackContext;
 
 CallbackContext callback_context;
@@ -229,6 +316,52 @@ void python_keyboard_callback(KeyboardEvent event)
 
 	PyObject *result
 	    = PyObject_CallFunctionObjArgs(callback_context.py_callback, py_event, NULL);
+	if (!result)
+		PyErr_Print();
+	else
+		Py_DECREF(result);
+
+	Py_DECREF(py_event);
+	PyGILState_Release(gstate);
+}
+
+void python_mouse_button_callback(MouseButtonEvent event)
+{
+	PyGILState_STATE gstate;
+	gstate = PyGILState_Ensure();
+
+	PyObject *py_event = MouseButtonEvent_to_PyObject(&event);
+	if (!py_event) {
+		PyErr_Print();
+		PyGILState_Release(gstate);
+		return;
+	}
+
+	PyObject *result
+	    = PyObject_CallFunctionObjArgs(callback_context.py_callback_mouse_button, py_event, NULL);
+	if (!result)
+		PyErr_Print();
+	else
+		Py_DECREF(result);
+
+	Py_DECREF(py_event);
+	PyGILState_Release(gstate);
+}
+
+void python_mouse_move_callback(MouseMoveEvent event)
+{
+	PyGILState_STATE gstate;
+	gstate = PyGILState_Ensure();
+
+	PyObject *py_event = MouseMoveEvent_to_PyObject(&event);
+	if (!py_event) {
+		PyErr_Print();
+		PyGILState_Release(gstate);
+		return;
+	}
+
+	PyObject *result
+	    = PyObject_CallFunctionObjArgs(callback_context.py_callback_mouse_move, py_event, NULL);
 	if (!result)
 		PyErr_Print();
 	else
@@ -257,7 +390,7 @@ static PyObject *py_EventListener_start(PyObject *self, PyObject *args)
 	Py_INCREF(py_callback);
 	callback_context.py_callback = py_callback;
 
-	VInputError err = EventListener_start(listener, python_keyboard_callback);
+	VInputError err = EventListener2_start(listener, python_keyboard_callback, python_mouse_button_callback, python_mouse_move_callback);
 	if (err != VINPUT_OK) {
 		Py_DECREF(py_callback);
 		PyErr_SetString(PyExc_RuntimeError, VInput_error_get_message(err));
