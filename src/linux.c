@@ -1,5 +1,7 @@
 #include "libvinput.h"
 
+#include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -20,6 +22,8 @@ typedef struct _EventListenerInternal
 	XRecordContext context;
 
 	KeyboardCallback callback;
+	MouseMoveCallback callback_mouse_move;
+	MouseButtonCallback callback_mouse_button;
 
 	KeyboardModifiers modifiers;
 } EventListenerInternal;
@@ -55,7 +59,7 @@ VInputError _EventListener_init(EventListener *listener)
 	memset(range, 0, sizeof(XRecordRange));
 	// We only want KeyPresses and KeyReleases
 	range->device_events.first = KeyPress;
-	range->device_events.last = KeyRelease;
+	range->device_events.last = MotionNotify;
 
 	// Create the context
 	data->context = XRecordCreateContext(data->dpy, 0, &clients, 1, &range, 1);
@@ -182,21 +186,77 @@ KeyboardEvent xevent_to_key_event(
 	return final_event;
 }
 
+MouseButtonEvent xevent_to_mouse_button_event(
+    EventListenerInternal *data_, XRecordInterceptData *data)
+{
+	xEvent *event = (xEvent *)data->data;
+
+	MouseButtonEvent final_event = {
+		.button = MouseButtonLeft,
+		.kind = MousePressEvent,
+	};
+
+	switch (event->u.u.detail) {
+	case Button1: final_event.button = MouseButtonLeft; break;
+	case Button2: final_event.button = MouseButtonMiddle; break;
+	case Button3: final_event.button = MouseButtonRight; break;
+	default: final_event.button = MouseButtonLeft; break;
+	}
+
+	switch (event->u.u.type) {
+	case ButtonPress: final_event.kind = MousePressEvent; break;
+	case ButtonRelease: final_event.kind = MouseReleaseEvent; break;
+	default: break;
+	}
+
+	return final_event;
+}
+
+MouseMoveEvent xevent_to_mouse_move_event(
+    EventListenerInternal *data_, XRecordInterceptData *data)
+{
+	xEvent *event = (xEvent *)data->data;
+
+	int x_pos = event->u.keyButtonPointer.rootX;
+	int y_pos = event->u.keyButtonPointer.rootY;
+	static __thread int prev_x = 0;
+	static __thread int prev_y = 0;
+
+	float vel_x = (float)(x_pos - prev_x);
+	float vel_y = (float)(y_pos - prev_y);
+
+	return (MouseMoveEvent) {
+		.x = x_pos,
+		.y = y_pos,
+		.velocity_x = vel_x,
+		.velocity_y = vel_y,
+		.velocity = sqrtf(vel_x * vel_x + vel_y * vel_y),
+	};
+}
+
 void xrecord_callback(XPointer incoming, XRecordInterceptData *data)
 {
 	EventListenerInternal *data_ = (EventListenerInternal *)incoming;
-	if (data->category == XRecordFromServer)
-		data_->callback(xevent_to_key_event(data_, data));
+	if (data->category == XRecordFromServer) {
+		if (data->data[0] == KeyPress || data->data[0] == KeyRelease)
+			data_->callback(xevent_to_key_event(data_, data));
+		else if (data->data[0] == ButtonPress || data->data[0] == ButtonRelease)
+			data_->callback_mouse_button(xevent_to_mouse_button_event(data_, data));
+		else if (data->data[0] == MotionNotify)
+			data_->callback_mouse_move(xevent_to_mouse_move_event(data_, data));
+	}
 
 	XRecordFreeData(data);
 }
 
 VInputError EventListener2_start(EventListener *listener, KeyboardCallback callback,
-    MouseButtonCallback button_callaback, MouseMoveCallback move_callback)
+    MouseButtonCallback button_callback, MouseMoveCallback move_callback)
 {
 	if (!listener->initialized) return VINPUT_UNINITIALIZED;
 	EventListenerInternal *data = listener->data;
 	data->callback = callback;
+	data->callback_mouse_move = move_callback;
+	data->callback_mouse_button = button_callback;
 
 	// Start listening for events
 	if (!XRecordEnableContext(
