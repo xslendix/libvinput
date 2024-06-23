@@ -21,7 +21,7 @@ VInputError _EventEmulator_init(EventEmulator *emulator)
 	return VINPUT_OK;
 }
 
-VInputError EventEmulator_keyboard_state_get(
+VINPUT_PUBLIC VInputError EventEmulator_keyboard_state_get(
     EventEmulator *emulator, int **state, int *nstate)
 {
 	(void)nstate;
@@ -40,7 +40,7 @@ VInputError EventEmulator_keyboard_state_get(
 	return VINPUT_OK;
 }
 
-VInputError EventEmulator_keyboard_state_clear(EventEmulator *emulator)
+VINPUT_PUBLIC VInputError EventEmulator_keyboard_state_clear(EventEmulator *emulator)
 {
 	if (!emulator->initialized) return VINPUT_UNINITIALIZED;
 
@@ -56,7 +56,7 @@ VInputError EventEmulator_keyboard_state_clear(EventEmulator *emulator)
 	return VINPUT_OK;
 }
 
-VInputError EventEmulator_keyboard_state_set(
+VINPUT_PUBLIC VInputError EventEmulator_keyboard_state_set(
     EventEmulator *emulator, int *state, int nstate)
 {
 	(void)nstate;
@@ -79,7 +79,7 @@ VInputError EventEmulator_keyboard_state_set(
 	return VINPUT_OK;
 }
 
-VInputError EventEmulator_press(EventEmulator *emulator, uint16_t keysym)
+VINPUT_PUBLIC VInputError EventEmulator_press(EventEmulator *emulator, uint16_t keysym)
 {
 	if (!emulator->initialized) return VINPUT_UNINITIALIZED;
 
@@ -93,7 +93,7 @@ VInputError EventEmulator_press(EventEmulator *emulator, uint16_t keysym)
 	return VINPUT_OK;
 }
 
-VInputError EventEmulator_release(EventEmulator *emulator, uint16_t keysym)
+VINPUT_PUBLIC VInputError EventEmulator_release(EventEmulator *emulator, uint16_t keysym)
 {
 	if (!emulator->initialized) return VINPUT_UNINITIALIZED;
 
@@ -107,7 +107,7 @@ VInputError EventEmulator_release(EventEmulator *emulator, uint16_t keysym)
 	return VINPUT_OK;
 }
 
-VInputError EventEmulator_typec(EventEmulator *emulator, char ch)
+VINPUT_PUBLIC VInputError EventEmulator_typec(EventEmulator *emulator, char ch)
 {
 	if (!ch) return VINPUT_OK;
 	if (!emulator->initialized) return VINPUT_UNINITIALIZED;
@@ -137,7 +137,8 @@ VInputError EventEmulator_typec(EventEmulator *emulator, char ch)
 	return VINPUT_OK;
 }
 
-VInputError EventEmulator_types(EventEmulator *emulator, char *buf, size_t len)
+VINPUT_PUBLIC VInputError EventEmulator_types(
+    EventEmulator *emulator, char *buf, size_t len)
 {
 	if (!buf || !len) return VINPUT_OK;
 	if (!emulator->initialized) return VINPUT_UNINITIALIZED;
@@ -148,7 +149,7 @@ VInputError EventEmulator_types(EventEmulator *emulator, char *buf, size_t len)
 	return VINPUT_OK;
 }
 
-VInputError EventEmulator_free(EventEmulator *emulator)
+VINPUT_PUBLIC VInputError EventEmulator_free(EventEmulator *emulator)
 {
 	if (!emulator->initialized) return VINPUT_UNINITIALIZED;
 	return VINPUT_OK;

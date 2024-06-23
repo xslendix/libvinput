@@ -1,6 +1,23 @@
 #ifndef LIBVINPUT_H
 #define LIBVINPUT_H
 
+#if defined _WIN32 || defined __CYGWIN__
+#	ifdef BUILDING_VINPUT
+#		define VINPUT_PUBLIC __declspec(dllexport)
+#	else
+#		define VINPUT_PUBLIC __declspec(dllimport)
+#	endif
+#else
+#	ifdef BUILDING_VINPUT
+#		define VINPUT_PUBLIC __attribute__((visibility("default")))
+#	else
+#		define VINPUT_PUBLIC
+#	endif
+#endif
+
+#undef VINPUT_PUBLIC
+#define VINPUT_PUBLIC
+
 // If you wish to use the old names, you need to define "#define LIBVINPUT_OLD_NAMES"
 // before including this header.
 
@@ -120,39 +137,43 @@ typedef EventListener Listener;
 typedef EventEmulator Emulator;
 #endif
 
-bool VInput_modifier_pressed_except_shift(KeyboardModifiers modifiers);
+VINPUT_PUBLIC bool VInput_modifier_pressed_except_shift(KeyboardModifiers modifiers);
 
-char const *VInput_error_get_message(VInputError error);
+VINPUT_PUBLIC char const *VInput_error_get_message(VInputError error);
 
 // Create a EventListener, does not allocate memory for the listener.
-VInputError EventListener_create(EventListener *listener, bool listen_keyboard);
-VInputError EventListener2_create(EventListener *listener, bool listen_keyboard,
-    bool listen_mouse_button, bool listen_mouse_move);
+VINPUT_PUBLIC VInputError EventListener_create(
+    EventListener *listener, bool listen_keyboard);
+VINPUT_PUBLIC VInputError EventListener2_create(EventListener *listener,
+    bool listen_keyboard, bool listen_mouse_button, bool listen_mouse_move);
 // Make a Listener start listening. This is a blocking call.
-VInputError EventListener_start(EventListener *listener, KeyboardCallback callback);
-VInputError EventListener2_start(EventListener *listener, KeyboardCallback callback,
-    MouseButtonCallback button_callback, MouseMoveCallback move_callback);
+VINPUT_PUBLIC VInputError EventListener_start(
+    EventListener *listener, KeyboardCallback callback);
+VINPUT_PUBLIC VInputError EventListener2_start(EventListener *listener,
+    KeyboardCallback callback, MouseButtonCallback button_callback,
+    MouseMoveCallback move_callback);
 // Free up internal data in the Listener.
-VInputError EventListener_free(EventListener *listener);
+VINPUT_PUBLIC VInputError EventListener_free(EventListener *listener);
 
 // Create an EventEmulator, does not allocate memory for the emulator.
-VInputError EventEmulator_create(EventEmulator *emulator);
+VINPUT_PUBLIC VInputError EventEmulator_create(EventEmulator *emulator);
 // Get current keyboard state, modifiers only, allocates memory
-VInputError EventEmulator_keyboard_state_get(
+VINPUT_PUBLIC VInputError EventEmulator_keyboard_state_get(
     EventEmulator *emulator, int **state, int *nstate);
 // Clear current keyboard state, modifiers only
-VInputError EventEmulator_keyboard_state_clear(EventEmulator *emulator);
+VINPUT_PUBLIC VInputError EventEmulator_keyboard_state_clear(EventEmulator *emulator);
 // Set current keyboard state, modifiers only, clears current keyboard state
-VInputError EventEmulator_keyboard_state_set(
+VINPUT_PUBLIC VInputError EventEmulator_keyboard_state_set(
     EventEmulator *emulator, int *state, int nstate);
-VInputError EventEmulator_press(EventEmulator *emulator, uint16_t keysym);
-VInputError EventEmulator_release(EventEmulator *emulator, uint16_t keysym);
+VINPUT_PUBLIC VInputError EventEmulator_press(EventEmulator *emulator, uint16_t keysym);
+VINPUT_PUBLIC VInputError EventEmulator_release(EventEmulator *emulator, uint16_t keysym);
 // Type out an ASCII character.
-VInputError EventEmulator_typec(EventEmulator *emulator, char ch);
+VINPUT_PUBLIC VInputError EventEmulator_typec(EventEmulator *emulator, char ch);
 // Type out a string of ASCII characters.
-VInputError EventEmulator_types(EventEmulator *emulator, char *buf, size_t len);
+VINPUT_PUBLIC VInputError EventEmulator_types(
+    EventEmulator *emulator, char *buf, size_t len);
 // Free up internal data in the Emulator.
-VInputError EventEmulator_free(EventEmulator *emulator);
+VINPUT_PUBLIC VInputError EventEmulator_free(EventEmulator *emulator);
 
 #ifdef LIBVINPUT_OLD_NAMES
 #	define Listener_create EventListener_create

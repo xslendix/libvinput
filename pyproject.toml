@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.cibuildwheel]
+archs = ["auto"]
+skip = "*-musllinux_*"
+
+[tool.cibuildwheel.windows]
+archs = ["AMD64"]
+
+[tool.cibuildwheel.linux]
+archs = ["x86_64"]
+before-all = "yum --assumeyes install epel-release ; yum --assumeyes update ; yum --assumeyes install libxdo-devel libX11-devel libXtst-devel libXext-devel"

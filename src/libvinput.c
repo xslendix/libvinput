@@ -3,7 +3,7 @@
 extern VInputError _EventListener_init(EventListener *);
 extern VInputError _EventEmulator_init(EventEmulator *);
 
-bool VInput_modifier_pressed_except_shift(KeyboardModifiers modifiers)
+VINPUT_PUBLIC bool VInput_modifier_pressed_except_shift(KeyboardModifiers modifiers)
 {
 	return modifiers.left_control || modifiers.right_control || modifiers.left_alt
 	       || modifiers.right_alt || modifiers.left_meta || modifiers.right_meta
@@ -11,7 +11,7 @@ bool VInput_modifier_pressed_except_shift(KeyboardModifiers modifiers)
 	       || modifiers.right_hyper;
 }
 
-char const *VInput_error_get_message(VInputError error)
+VINPUT_PUBLIC char const *VInput_error_get_message(VInputError error)
 {
 	switch (error) {
 	case VINPUT_OK: return "OK";
@@ -34,18 +34,20 @@ char const *VInput_error_get_message(VInputError error)
 	return "Unknown error code";
 }
 
-VInputError EventListener_create(EventListener *listener, bool listen_keyboard)
+VINPUT_PUBLIC VInputError EventListener_create(
+    EventListener *listener, bool listen_keyboard)
 {
 	return EventListener2_create(listener, listen_keyboard, false, false);
 }
 
-VInputError EventListener_start(EventListener *listener, KeyboardCallback callback)
+VINPUT_PUBLIC VInputError EventListener_start(
+    EventListener *listener, KeyboardCallback callback)
 {
 	return EventListener2_start(listener, callback, NULL, NULL);
 }
 
-VInputError EventListener2_create(EventListener *listener, bool listen_keyboard,
-    bool listen_mouse_button, bool listen_mouse_move)
+VINPUT_PUBLIC VInputError EventListener2_create(EventListener *listener,
+    bool listen_keyboard, bool listen_mouse_button, bool listen_mouse_move)
 {
 	listener->listen_keyboard = listen_keyboard;
 	listener->listen_mouse_button = listen_mouse_button;
@@ -53,7 +55,7 @@ VInputError EventListener2_create(EventListener *listener, bool listen_keyboard,
 	return _EventListener_init(listener);
 }
 
-VInputError EventEmulator_create(EventEmulator *emulator)
+VINPUT_PUBLIC VInputError EventEmulator_create(EventEmulator *emulator)
 {
 	return _EventEmulator_init(emulator);
 }

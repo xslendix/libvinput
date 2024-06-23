@@ -5,10 +5,10 @@ ifeq ($(shell uname), Linux)
 all: wordlogger
 
 libvinput.so: src/libvinput.c src/linux_emu.c src/linux.c
-	$(CC) $(CFLAGS) -fPIC -o $@ -shared $^ -lm -lX11 -lXtst -I/usr/local/include -L/usr/local/lib -lxdo
+	$(CC) $(CFLAGS) -fPIC -o $@ -shared $^ -lm -lX11 -lXtst -I/usr/local/include -Isrc -L/usr/local/lib -lxdo
 
 wordlogger: wordlogger.c libvinput.so
-	$(CC) $(CFLAGS) wordlogger.c -o $@ -L. -lvinput -lX11 -lXtst -I/usr/local/include -L/usr/local/lib -lxdo
+	$(CC) $(CFLAGS) wordlogger.c -o $@ -L. -lvinput -lX11 -lXtst -I/usr/local/include -Isrc -L/usr/local/lib -lxdo
 
 install: libvinput.so
 	install -m 777 libvinput.so /usr/local/lib
@@ -37,24 +37,31 @@ endif
 
 # Windows/WINAPI
 ifeq ($(OS), Windows_NT)
-all: wordlogger.exe
+all: wordlogger libvinput.dll vinput.lib
+	dumpbin /EXPORTS vinput.lib
 
-libvinput.dll: src/libvinput.c src/windows_emu.c src/windows.c
-	x86_64-w64-mingw32-gcc $(CFLAGS) -fPIC -o $@ -shared $^
+libvinput.dll: libvinput.obj windows_emu.obj windows.obj
+	link /DLL /OUT:libvinput.dll libvinput.obj windows_emu.obj windows.obj User32.lib Kernel32.lib
 
-vinput.lib: src/libvinput.c src/windows_emu.c src/windows.c
-	x86_64-w64-mingw32-gcc $(CFLAGS) -c src/libvinput.c -o libvinput.o
-	x86_64-w64-mingw32-gcc $(CFLAGS) -c src/windows_emu.c -o windows_emu.o
-	x86_64-w64-mingw32-gcc $(CFLAGS) -c src/windows.c -o windows.o
-	ar rcs vinput.lib libvinput.o windows_emu.o windows.o
+libvinput.obj: src/libvinput.c
+	cl /LD /I src /DBUILDING_VINPUT /Fo$@ /c src\libvinput.c
 
-wordlogger.exe: libvinput.dll wordlogger.c
-	x86_64-w64-mingw32-gcc $(CFLAGS) wordlogger.c -o $@ -L. -Isrc -l:$<
+windows_emu.obj: src/windows_emu.c
+	cl /LD /I src /DBUILDING_VINPUT /Fo$@ /c src\windows_emu.c
+
+windows.obj: src/windows.c
+	cl /LD /I src /DBUILDING_VINPUT /Fo$@ /c src\windows.c
+
+vinput.lib: libvinput.obj windows_emu.obj windows.obj
+	lib /OUT:vinput.lib libvinput.obj windows_emu.obj windows.obj
+
+wordlogger: wordlogger.c vinput.lib
+	cl /I src /Fo$@ /Fe$@ wordlogger.c vinput.lib User32.lib Kernel32.lib
 
 clean:
-	rm -f wordlogger.exe
-	rm -f libvinput.dll
-	rm -f vinput.lib
+	del /F /Q libvinput.dll vinput.lib libvinput.obj windows_emu.obj windows.obj
 endif
+
+.PHONY: all clean
 
 .PHONY: install clean

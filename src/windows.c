@@ -56,7 +56,7 @@ KeyboardEvent generate_keyevent(WPARAM wparam, LPARAM lparam)
 	}
 }
 
-LRESULT CALLBACK keyboard_callback(int code, WPARAM wparam, LPARAM lparam)
+static LRESULT CALLBACK keyboard_callback(int code, WPARAM wparam, LPARAM lparam)
 {
 	KeyboardCallback cb = TlsGetValue(tls_index);
 	// Handle key events or call next hook in chain.
@@ -70,7 +70,7 @@ LRESULT CALLBACK keyboard_callback(int code, WPARAM wparam, LPARAM lparam)
 	return 0;
 }
 
-MouseButtonEvent generate_button_event(MouseButtonEventKind kind, WPARAM wparam)
+static MouseButtonEvent generate_button_event(MouseButtonEventKind kind, WPARAM wparam)
 {
 	MouseButton button = -1;
 	if (wparam == WM_LBUTTONUP || wparam == WM_NCLBUTTONUP || wparam == WM_LBUTTONDOWN
@@ -89,7 +89,7 @@ MouseButtonEvent generate_button_event(MouseButtonEventKind kind, WPARAM wparam)
 	};
 }
 
-MouseMoveEvent generate_move_event(LPARAM lparam)
+static MouseMoveEvent generate_move_event(LPARAM lparam)
 {
 	MSLLHOOKSTRUCT *evt = (MSLLHOOKSTRUCT *)lparam;
 
@@ -114,7 +114,7 @@ MouseMoveEvent generate_move_event(LPARAM lparam)
 	};
 }
 
-LRESULT CALLBACK mouse_callback(int code, WPARAM wparam, LPARAM lparam)
+static LRESULT CALLBACK mouse_callback(int code, WPARAM wparam, LPARAM lparam)
 {
 	if (code < 0) return CallNextHookEx(NULL, code, wparam, lparam);
 
@@ -199,8 +199,9 @@ VInputError _EventListener_init(EventListener *listener)
 	return VINPUT_OK;
 }
 
-VInputError EventListener2_start(EventListener *listener, KeyboardCallback callback,
-    MouseButtonCallback button_callback, MouseMoveCallback move_callback)
+VINPUT_PUBLIC VInputError EventListener2_start(EventListener *listener,
+    KeyboardCallback callback, MouseButtonCallback button_callback,
+    MouseMoveCallback move_callback)
 {
 	if (!listener->initialized) return VINPUT_UNINITIALIZED;
 
@@ -218,7 +219,7 @@ VInputError EventListener2_start(EventListener *listener, KeyboardCallback callb
 	return VINPUT_OK;
 }
 
-VInputError EventListener_free(EventListener *listener)
+VINPUT_PUBLIC VInputError EventListener_free(EventListener *listener)
 {
 	if (!listener->initialized) return VINPUT_UNINITIALIZED;
 	EventListenerInternal *data = listener->data;
