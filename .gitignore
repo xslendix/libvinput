@@ -12,3 +12,5 @@ build
 compile_commands.json
 *.lib
 *.o
+.cache
+*.so

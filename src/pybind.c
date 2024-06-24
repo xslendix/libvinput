@@ -213,10 +213,12 @@ typedef struct
 	PyObject_HEAD MouseButtonEvent event;
 } PyMouseButtonEvent;
 
-static PyObject *MouseButtonEvent_get_button(PyMouseButtonEvent *self, void *closure) {
+static PyObject *MouseButtonEvent_get_button(PyMouseButtonEvent *self, void *closure)
+{
 	return PyLong_FromUnsignedLong(self->event.button);
 }
-static PyObject *MouseButtonEvent_get_kind(PyMouseButtonEvent *self, void *closure) {
+static PyObject *MouseButtonEvent_get_kind(PyMouseButtonEvent *self, void *closure)
+{
 	return PyLong_FromUnsignedLong(self->event.kind);
 }
 
@@ -236,7 +238,8 @@ static PyTypeObject PyMouseButtonEventType = {
 
 PyObject *MouseButtonEvent_to_PyObject(MouseButtonEvent *event)
 {
-	PyMouseButtonEvent *py_event = PyObject_New(PyMouseButtonEvent, &PyMouseButtonEventType);
+	PyMouseButtonEvent *py_event
+	    = PyObject_New(PyMouseButtonEvent, &PyMouseButtonEventType);
 	if (!py_event) {
 		PyErr_SetString(PyExc_MemoryError, "Failed to create PyMouseButtonEvent object");
 		return NULL;
@@ -250,19 +253,24 @@ typedef struct
 	PyObject_HEAD MouseMoveEvent event;
 } PyMouseMoveEvent;
 
-static PyObject *MouseMoveEvent_get_x(PyMouseMoveEvent *self, void *closure) {
+static PyObject *MouseMoveEvent_get_x(PyMouseMoveEvent *self, void *closure)
+{
 	return PyLong_FromUnsignedLong((unsigned long)self->event.x);
 }
-static PyObject *MouseMoveEvent_get_y(PyMouseMoveEvent *self, void *closure) {
+static PyObject *MouseMoveEvent_get_y(PyMouseMoveEvent *self, void *closure)
+{
 	return PyLong_FromUnsignedLong((unsigned long)self->event.y);
 }
-static PyObject *MouseMoveEvent_get_velocity_x(PyMouseMoveEvent *self, void *closure) {
+static PyObject *MouseMoveEvent_get_velocity_x(PyMouseMoveEvent *self, void *closure)
+{
 	return PyFloat_FromDouble((double)self->event.velocity_x);
 }
-static PyObject *MouseMoveEvent_get_velocity_y(PyMouseMoveEvent *self, void *closure) {
+static PyObject *MouseMoveEvent_get_velocity_y(PyMouseMoveEvent *self, void *closure)
+{
 	return PyFloat_FromDouble((double)self->event.velocity_y);
 }
-static PyObject *MouseMoveEvent_get_velocity(PyMouseMoveEvent *self, void *closure) {
+static PyObject *MouseMoveEvent_get_velocity(PyMouseMoveEvent *self, void *closure)
+{
 	return PyFloat_FromDouble((double)self->event.velocity);
 }
 static PyGetSetDef MouseMoveEvent_getsetters[] = {
@@ -321,103 +329,122 @@ void python_keyboard_callback(KeyboardEvent event)
 	else
 		Py_DECREF(result);
 
-	//if (py_event)
-		//Py_DECREF(py_event);
+	if (py_event) Py_DECREF(py_event);
 	PyGILState_Release(gstate);
 }
 
 void python_mouse_button_callback(MouseButtonEvent event)
 {
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
+	PyGILState_STATE gstate;
+	gstate = PyGILState_Ensure();
 
-    PyObject *py_event = MouseButtonEvent_to_PyObject(&event);
-    if (!py_event) {
-        PyErr_Print();
-        PyGILState_Release(gstate);
-        return;
-    }
+	PyObject *py_event = MouseButtonEvent_to_PyObject(&event);
+	if (!py_event) {
+		PyErr_Print();
+		PyGILState_Release(gstate);
+		return;
+	}
 
-    PyObject *result = PyObject_CallFunctionObjArgs(callback_context.py_callback_mouse_button, py_event, NULL);
-    if (!result) {
-        PyErr_Print();
-    } else {
-        Py_DECREF(result);
-    }
+	PyObject *result = PyObject_CallFunctionObjArgs(
+	    callback_context.py_callback_mouse_button, py_event, NULL);
+	if (!result) {
+		PyErr_Print();
+	} else {
+		Py_DECREF(result);
+	}
 
-		//if (py_event)
-			//Py_DECREF(py_event);
-    PyGILState_Release(gstate);
+	if (py_event) Py_DECREF(py_event);
+	PyGILState_Release(gstate);
 }
 
 void python_mouse_move_callback(MouseMoveEvent event)
 {
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
+	PyGILState_STATE gstate;
+	gstate = PyGILState_Ensure();
 
-    PyObject *py_event = MouseMoveEvent_to_PyObject(&event);
-    if (!py_event) {
-        PyErr_Print();
-        PyGILState_Release(gstate);
-        return;
-    }
+	PyObject *py_event = MouseMoveEvent_to_PyObject(&event);
+	if (!py_event) {
+		PyErr_Print();
+		PyGILState_Release(gstate);
+		return;
+	}
 
-    PyObject *result = PyObject_CallFunctionObjArgs(callback_context.py_callback_mouse_move, py_event, NULL);
-    if (!result) {
-        PyErr_Print();
-    } else {
-        Py_DECREF(result);
-    }
+	PyObject *result = PyObject_CallFunctionObjArgs(
+	    callback_context.py_callback_mouse_move, py_event, NULL);
+	if (!result) {
+		PyErr_Print();
+	} else {
+		Py_DECREF(result);
+	}
 
-		//if (py_event)
-			//Py_DECREF(py_event);
-    PyGILState_Release(gstate);
+	if (py_event) Py_DECREF(py_event);
+	PyGILState_Release(gstate);
 }
 
 static PyObject *py_EventListener_start(PyObject *self, PyObject *args)
 {
-    PyObject *py_listener_capsule;
-    PyObject *py_callback, *py_callback_mouse_button, *py_callback_mouse_move;
+	PyObject *py_listener_capsule;
+	PyObject *py_callback, *py_callback_mouse_button, *py_callback_mouse_move;
 
-    if (!PyArg_ParseTuple(args, "OOOO", &py_listener_capsule, &py_callback, &py_callback_mouse_button, &py_callback_mouse_move)) 
-        return NULL;
+	if (!PyArg_ParseTuple(args, "OOOO", &py_listener_capsule, &py_callback,
+	        &py_callback_mouse_button, &py_callback_mouse_move))
+		return NULL;
 
-    if (!PyCallable_Check(py_callback)) {
-        PyErr_SetString(PyExc_TypeError, "Keyboard callback must be callable");
-        return NULL;
-    }
+	if (!PyCallable_Check(py_callback)) {
+		PyErr_SetString(PyExc_TypeError, "Keyboard callback must be callable");
+		return NULL;
+	}
 
-    if (!PyCallable_Check(py_callback_mouse_button)) {
-        PyErr_SetString(PyExc_TypeError, "Mouse button callback must be callable");
-        return NULL;
-    }
+	if (!PyCallable_Check(py_callback_mouse_button)) {
+		PyErr_SetString(PyExc_TypeError, "Mouse button callback must be callable");
+		return NULL;
+	}
 
-    if (!PyCallable_Check(py_callback_mouse_move)) {
-        PyErr_SetString(PyExc_TypeError, "Mouse move callback must be callable");
-        return NULL;
-    }
+	if (!PyCallable_Check(py_callback_mouse_move)) {
+		PyErr_SetString(PyExc_TypeError, "Mouse move callback must be callable");
+		return NULL;
+	}
 
-    EventListener *listener = (EventListener *)PyCapsule_GetPointer(py_listener_capsule, "EventListener");
-    if (!listener) 
-        return NULL;
+	EventListener *listener
+	    = (EventListener *)PyCapsule_GetPointer(py_listener_capsule, "EventListener");
+	if (!listener) return NULL;
 
-    Py_INCREF(py_callback);
-    Py_INCREF(py_callback_mouse_button);
-    Py_INCREF(py_callback_mouse_move);
-    callback_context.py_callback = py_callback;
-    callback_context.py_callback_mouse_move = py_callback_mouse_move;
-    callback_context.py_callback_mouse_button = py_callback_mouse_button;
+	Py_INCREF(py_callback);
+	Py_INCREF(py_callback_mouse_button);
+	Py_INCREF(py_callback_mouse_move);
+	callback_context.py_callback = py_callback;
+	callback_context.py_callback_mouse_move = py_callback_mouse_move;
+	callback_context.py_callback_mouse_button = py_callback_mouse_button;
 
-    VInputError err = EventListener2_start(listener, python_keyboard_callback, python_mouse_button_callback, python_mouse_move_callback);
-    if (err != VINPUT_OK) {
-        Py_DECREF(py_callback);
-        Py_DECREF(py_callback_mouse_button);
-        Py_DECREF(py_callback_mouse_move);
-        PyErr_SetString(PyExc_RuntimeError, VInput_error_get_message(err));
-        return NULL;
-    }
+	VInputError err = EventListener2_start(listener, python_keyboard_callback,
+	    python_mouse_button_callback, python_mouse_move_callback);
+	if (err != VINPUT_OK) {
+		Py_DECREF(py_callback);
+		Py_DECREF(py_callback_mouse_button);
+		Py_DECREF(py_callback_mouse_move);
+		PyErr_SetString(PyExc_RuntimeError, VInput_error_get_message(err));
+		return NULL;
+	}
 
-    Py_RETURN_NONE;
+	Py_RETURN_NONE;
+}
+
+static PyObject *py_modifier_pressed_except_shift(PyObject *self, PyObject *args)
+{
+	PyObject *py_keyboard_modifiers_capsule;
+	KeyboardModifiers modifiers;
+
+	if (!PyArg_ParseTuple(args, "O", &py_keyboard_modifiers_capsule)) return NULL;
+
+	PyKeyboardModifiers *py_modifiers = (PyKeyboardModifiers *)PyCapsule_GetPointer(
+	    py_keyboard_modifiers_capsule, "libvinput.KeyboardModifiers");
+
+	if (!py_modifiers) return NULL;
+
+	modifiers = py_modifiers->modifiers;
+
+	bool result = VInput_modifier_pressed_except_shift(modifiers);
+	return PyBool_FromLong(result);
 }
 
 static PyMethodDef VInputMethods[] = {
@@ -427,6 +454,8 @@ static PyMethodDef VInputMethods[] = {
 	    "Destroy an event listener." },
 	{ "listener_start", py_EventListener_start, METH_VARARGS,
 	    "Make an EventListener start listening. This is a blocking call." },
+	{ "modifier_pressed_except_shift", py_modifier_pressed_except_shift, METH_VARARGS,
+	    "Check if any modifier key is pressed except shift." },
 	{ NULL, NULL, 0, NULL } // Sentinel
 };
 
@@ -442,10 +471,18 @@ PyMODINIT_FUNC PyInit_libvinput(void)
 	PyObject *m = PyModule_Create(&vinputmodule);
 	if (PyType_Ready(&PyKeyboardModifiersType) < 0) return NULL;
 	if (PyType_Ready(&PyKeyboardEventType) < 0) return NULL;
+	if (PyType_Ready(&PyMouseButtonEventType) < 0) return NULL;
+	if (PyType_Ready(&PyMouseMoveEventType) < 0) return NULL;
 
 	Py_INCREF(&PyKeyboardModifiersType);
 	Py_INCREF(&PyKeyboardEventType);
+	Py_INCREF(&PyMouseButtonEventType);
+	Py_INCREF(&PyMouseMoveEventType);
+
 	PyModule_AddObject(m, "KeyboardModifiers", (PyObject *)&PyKeyboardModifiersType);
 	PyModule_AddObject(m, "KeyboardEvent", (PyObject *)&PyKeyboardEventType);
+	PyModule_AddObject(m, "MouseButtonEvent", (PyObject *)&PyMouseButtonEventType);
+	PyModule_AddObject(m, "MouseMoveEvent", (PyObject *)&PyMouseMoveEventType);
+
 	return m;
 }
