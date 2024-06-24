@@ -12,6 +12,13 @@ def signal_handler(sig, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 word = ''
+
+def commit():
+    global word
+    if len(word) > 0:
+        print("Word:", word)
+        word = ''
+
 def cb(evt):
     global word
 
@@ -26,17 +33,15 @@ def cb(evt):
 
     if not evt.keychar.isprintable(): return
     if not evt.keychar.isalpha() or evt.keychar.isspace():
-        if len(word) > 0:
-            print("Word:", word)
-            word = ''
+        commit()
     else:
         word += evt.keychar
 
 def cb_mouse(evt):
-    print('button', evt.button, evt.kind)
+    commit()
 
 def cb_mouse_move(evt):
-    #print('move', evt.x, evt.y, evt.velocity_x, evt.velocity_y, evt.velocity)
+    commit()
     pass
 
 libvinput.listener_start(logger, cb, cb_mouse, cb_mouse_move)
