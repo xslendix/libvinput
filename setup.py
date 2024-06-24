@@ -43,7 +43,7 @@ module = Extension('libvinput',
 
 setup(
     name='libvinput',
-    version='1.1',
+    version='1.2',
     author='Slendi',
     description='Python interface for libvinput',
     long_description=long_description,
