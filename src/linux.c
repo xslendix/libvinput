@@ -238,11 +238,12 @@ void xrecord_callback(XPointer incoming, XRecordInterceptData *data)
 {
 	EventListenerInternal *data_ = (EventListenerInternal *)incoming;
 	if (data->category == XRecordFromServer) {
-		if (data->data[0] == KeyPress || data->data[0] == KeyRelease)
+		if (data_->callback && (data->data[0] == KeyPress || data->data[0] == KeyRelease))
 			data_->callback(xevent_to_key_event(data_, data));
-		else if (data->data[0] == ButtonPress || data->data[0] == ButtonRelease)
+		else if (data_->callback_mouse_button
+		         && (data->data[0] == ButtonPress || data->data[0] == ButtonRelease))
 			data_->callback_mouse_button(xevent_to_mouse_button_event(data_, data));
-		else if (data->data[0] == MotionNotify)
+		else if (data_->callback_mouse_move && data->data[0] == MotionNotify)
 			data_->callback_mouse_move(xevent_to_mouse_move_event(data_, data));
 	}
 

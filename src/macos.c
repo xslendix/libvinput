@@ -134,28 +134,32 @@ CGEventRef CGEventCallback(
 
 		if (listener->data) {
 			KeyboardCallback callback = (KeyboardCallback)data->callback;
-			callback(kevent);
+			if (callback) callback(kevent);
 		}
 	} else if (type == kCGEventLeftMouseDown) {
-		data->button_callback((MouseButtonEvent) {
-		    .button = MouseButtonLeft,
-		    .kind = MousePressEvent,
-		});
+		if (data->button_callback)
+			data->button_callback((MouseButtonEvent) {
+			    .button = MouseButtonLeft,
+			    .kind = MousePressEvent,
+			});
 	} else if (type == kCGEventRightMouseDown) {
-		data->button_callback((MouseButtonEvent) {
-		    .button = MouseButtonRight,
-		    .kind = MousePressEvent,
-		});
+		if (data->button_callback)
+			data->button_callback((MouseButtonEvent) {
+			    .button = MouseButtonRight,
+			    .kind = MousePressEvent,
+			});
 	} else if (type == kCGEventLeftMouseUp) {
-		data->button_callback((MouseButtonEvent) {
-		    .button = MouseButtonLeft,
-		    .kind = MouseReleaseEvent,
-		});
+		if (data->button_callback)
+			data->button_callback((MouseButtonEvent) {
+			    .button = MouseButtonLeft,
+			    .kind = MouseReleaseEvent,
+			});
 	} else if (type == kCGEventRightMouseUp) {
-		data->button_callback((MouseButtonEvent) {
-		    .button = MouseButtonRight,
-		    .kind = MouseReleaseEvent,
-		});
+		if (data->button_callback)
+			data->button_callback((MouseButtonEvent) {
+			    .button = MouseButtonRight,
+			    .kind = MouseReleaseEvent,
+			});
 	} else if (type == kCGEventMouseMoved) {
 		// FIXME: This is not thread safe!!!
 		static int last_x = 0, last_y = 0;
@@ -167,13 +171,14 @@ CGEventRef CGEventCallback(
 		last_x = pos_x;
 		last_y = pos_y;
 
-		data->move_callback((MouseMoveEvent) {
-		    .x = pos_x,
-		    .y = point.y,
-		    .velocity_x = velocity_x,
-		    .velocity_y = velocity_y,
-		    .velocity = sqrtf(velocity_x * velocity_x + velocity_y * velocity_y),
-		});
+		if (data->move_callback)
+			data->move_callback((MouseMoveEvent) {
+			    .x = pos_x,
+			    .y = point.y,
+			    .velocity_x = velocity_x,
+			    .velocity_y = velocity_y,
+			    .velocity = sqrtf(velocity_x * velocity_x + velocity_y * velocity_y),
+			});
 	}
 
 	return event;
