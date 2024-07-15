@@ -1,0 +1,12 @@
+prefix=/usr/local
+exec_prefix=${prefix}
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: libvinput
+Description: A library for recording and emulating keyboard and mouse input
+Version: 1.4
+Requires: libxdo x11
+Libs: -L${libdir} -lvinput
+Cflags: -I${includedir}
+

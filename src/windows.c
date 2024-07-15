@@ -3,7 +3,6 @@
 #include <math.h>
 #include <stdlib.h>
 
-#include <Windowsx.h>
 #include <windows.h>
 #include <winuser.h>
 

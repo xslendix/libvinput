@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <libvinput.h>
+#include "src/libvinput.h"
 
 char g_word_buffer[128] = { 0 };
 int g_word_len = 0;

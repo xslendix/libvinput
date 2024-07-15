@@ -62,6 +62,20 @@ clean:
 	del /F /Q libvinput.dll vinput.lib libvinput.obj windows_emu.obj windows.obj
 endif
 
+ifeq ($(OS), MINGW)
+all: wordlogger.exe libvinput.dll
+
+libvinput.dll: src/libvinput.c src/windows_emu.c src/windows.c
+	x86_64-w64-mingw32-gcc $(CFLAGS) -shared -o $@ $^ -DWINVER=0x0600 -luser32 -lkernel32
+
+wordlogger.exe: wordlogger.c libvinput.dll
+	x86_64-w64-mingw32-gcc $(CFLAGS) -o $@ wordlogger.c -L. -lvinput -DWINVER=0x0600 -luser32 -lkernel32
+
+clean:
+	rm -f wordlogger.exe
+	rm -f libvinput.dll
+endif
+
 .PHONY: all clean
 
 .PHONY: install clean
