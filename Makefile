@@ -26,7 +26,7 @@ ifeq ($(shell uname), Darwin)
 all: wordlogger_mac
 
 libvinput.dylib: src/libvinput.c src/macos_emu.c src/macos.c
-	$(CC) $(CFLAGS) -DVERSION=$(VERSION) -fPIC -framework ApplicationServices -framework Carbon -o $@ -shared $^
+	$(CC) $(CFLAGS) -DVERSION=$(VERSION) -arch arm64 -arch x86_64 -fPIC -framework ApplicationServices -framework Carbon -o $@ -shared $^
 
 wordlogger_mac: wordlogger.c libvinput.dylib
 	$(CC) $(CFLAGS) wordlogger.c -o $@ -Isrc -L. -lvinput -Wl,-rpath,@loader_path/.
