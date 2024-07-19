@@ -6,6 +6,8 @@
 #include <windows.h>
 #include <winuser.h>
 
+#define WM_QUIT_LOOP (WM_USER + 1)
+
 // FIXME: Make this thread-safe!
 
 typedef struct _EventListenerInternal
@@ -13,6 +15,10 @@ typedef struct _EventListenerInternal
 	HINSTANCE exe;
 	HHOOK key_hook;
 	HHOOK mouse_hook;
+	DWORD thread_id;
+
+	bool running;
+	bool can_free;
 } EventListenerInternal;
 
 // Thread-Local Storage
@@ -57,6 +63,7 @@ KeyboardEvent generate_keyevent(WPARAM wparam, LPARAM lparam)
 
 static LRESULT CALLBACK keyboard_callback(int code, WPARAM wparam, LPARAM lparam)
 {
+	if (code < 0) CallNextHookEx(NULL, code, wparam, lparam);
 	KeyboardCallback cb = TlsGetValue(tls_index);
 	// Handle key events or call next hook in chain.
 	switch (wparam) {
@@ -64,9 +71,8 @@ static LRESULT CALLBACK keyboard_callback(int code, WPARAM wparam, LPARAM lparam
 	case WM_KEYUP:
 		if (cb) cb(generate_keyevent(wparam, lparam));
 		break;
-	default: return CallNextHookEx(NULL, code, wparam, lparam);
 	}
-	return 0;
+	return CallNextHookEx(NULL, code, wparam, lparam);
 }
 
 static MouseButtonEvent generate_button_event(MouseButtonEventKind kind, WPARAM wparam)
@@ -203,6 +209,12 @@ VINPUT_PUBLIC VInputError EventListener2_start(EventListener *listener,
     MouseMoveCallback move_callback)
 {
 	if (!listener->initialized) return VINPUT_UNINITIALIZED;
+	EventListenerInternal *data = listener->data;
+
+	data->running = true;
+	data->can_free = false;
+
+	data->thread_id = GetCurrentThreadId();
 
 	TlsSetValue(tls_index, callback);
 	TlsSetValue(tls_index_mouse_move, move_callback);
@@ -210,10 +222,13 @@ VINPUT_PUBLIC VInputError EventListener2_start(EventListener *listener,
 
 	// Propagate messages.
 	MSG msg;
-	while (GetMessage(&msg, NULL, 0, 0) != 0) {
+	while (GetMessage(&msg, NULL, 0, 0) != 0 && data->running) {
+		if (msg.message == WM_QUIT_LOOP) break;
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
+
+	data->can_free = true;
 
 	return VINPUT_OK;
 }
@@ -222,6 +237,12 @@ VINPUT_PUBLIC VInputError EventListener_free(EventListener *listener)
 {
 	if (!listener->initialized) return VINPUT_UNINITIALIZED;
 	EventListenerInternal *data = listener->data;
+
+	data->running = false;
+	PostThreadMessage(data->thread_id, WM_QUIT_LOOP, 0, 0);
+
+	while (!data->can_free)
+		; // FIXME: Do not hang the CPU like this, it's really ugly.
 
 	UnhookWindowsHookEx(data->key_hook);
 	UnhookWindowsHookEx(data->mouse_hook);

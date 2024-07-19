@@ -5,6 +5,10 @@
 
 #include "src/libvinput.h"
 
+#ifdef _WIN32
+#	include <windows.h>
+#endif
+
 char g_word_buffer[128] = { 0 };
 int g_word_len = 0;
 
@@ -56,17 +60,44 @@ void mouse_move_callback(MouseMoveEvent evt)
 	commit_word();
 }
 
+#ifndef _WIN32
 void signal_handler(int sig)
 {
 	printf("Signal %d received, exiting...\n", sig);
 	EventListener_free(&g_listener);
 	exit(0);
 }
+#endif
+
+#ifdef _WIN32
+BOOL WINAPI CtrlHandler(DWORD fdwCtrlType)
+{
+	switch (fdwCtrlType) {
+	case CTRL_C_EVENT:
+	case CTRL_CLOSE_EVENT:
+	case CTRL_BREAK_EVENT:
+	case CTRL_LOGOFF_EVENT:
+	case CTRL_SHUTDOWN_EVENT:
+		printf("Ctrl received, exiting...\n");
+		EventListener_free(&g_listener);
+	default: return FALSE;
+	}
+}
+#endif
 
 int main(void)
 {
+#ifdef _WIN32
+	if (!SetConsoleCtrlHandler(CtrlHandler, TRUE)) {
+		puts("Failed to set handler. Please force quit.");
+		while (1)
+			;
+	}
+#else
 	// signal(SIGINT, signal_handler);
 	signal(SIGTERM, signal_handler);
+
+#endif
 
 	VInputError status = EventListener2_create(&g_listener, true, true, true);
 	if (status != VINPUT_OK) {
