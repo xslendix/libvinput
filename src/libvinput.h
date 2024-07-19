@@ -29,6 +29,10 @@ extern "C" {
 #include <stddef.h>
 #include <stdint.h>
 
+#define VINPUT_VERSION_MAJOR(x) (((x) & 0xff0000) >> 16)
+#define VINPUT_VERSION_MINOR(x) (((x) & 0xff00) >> 8)
+#define VINPUT_VERSION_PATCH(x) ((x) & 0xff)
+
 // Currently, only used by the EventListener.
 typedef struct _KeyboardModifiers
 {
@@ -139,6 +143,7 @@ typedef EventEmulator Emulator;
 
 VINPUT_PUBLIC bool VInput_modifier_pressed_except_shift(KeyboardModifiers modifiers);
 
+VINPUT_PUBLIC uint32_t VInput_version(void);
 VINPUT_PUBLIC char const *VInput_error_get_message(VInputError error);
 
 // Create a EventListener, does not allocate memory for the listener.

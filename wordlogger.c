@@ -96,8 +96,12 @@ int main(void)
 #else
 	// signal(SIGINT, signal_handler);
 	signal(SIGTERM, signal_handler);
-
 #endif
+
+	uint32_t version = VInput_version();
+	printf("VInput version: %d.%d.%d\n", VINPUT_VERSION_MAJOR(version),
+	    VINPUT_VERSION_MINOR(version), VINPUT_VERSION_PATCH(version));
+	fflush(stdout);
 
 	VInputError status = EventListener2_create(&g_listener, true, true, true);
 	if (status != VINPUT_OK) {

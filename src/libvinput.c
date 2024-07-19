@@ -59,3 +59,8 @@ VINPUT_PUBLIC VInputError EventEmulator_create(EventEmulator *emulator)
 {
 	return _EventEmulator_init(emulator);
 }
+
+VINPUT_PUBLIC uint32_t VInput_version(void)
+{
+	return VERSION;
+}
