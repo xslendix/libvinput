@@ -4,6 +4,9 @@ libvinput.dylib
 wordlogger
 wordlogger.exe
 wordlogger_mac
+test_emu
+test_emu_mac
+test_emu.exe
 *.dSYM
 dist
 build

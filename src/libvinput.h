@@ -129,6 +129,8 @@ typedef enum _VInputError
 
 	// MACOS
 	VINPUT_MAC_TAP,
+	VINPUT_MAC_EVENT_CREATION,
+	VINPUT_MAC_INVALID_KEY,
 
 } VInputError;
 
