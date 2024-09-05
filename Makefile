@@ -1,5 +1,5 @@
 CFLAGS = -I. -Wall -Wextra -O0 -ggdb #-O3
-VERSION = 0x010000
+VERSION = 0x010100
 
 # Linux/X11
 ifeq ($(shell uname), Linux)
