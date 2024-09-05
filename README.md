@@ -30,6 +30,12 @@ Documentation
 
 All the documentation can be found inside the `libvinput.h` file.
 
+Donating
+--------
+
+If you feel this library has been helpful, please consider supporting me by
+donating through my [Ko-Fi](https://ko-fi.com/slendi). Thank you!
+
 License
 -------
 
