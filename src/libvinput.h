@@ -150,12 +150,16 @@ VINPUT_PUBLIC char const *VInput_error_get_message(VInputError error);
 
 // Create a EventListener, does not allocate memory for the listener.
 VINPUT_PUBLIC VInputError EventListener_create(
-    EventListener *listener, bool listen_keyboard);
+    EventListener *listener, bool listen_keyboard)
+    __attribute__((deprecated("Use EventListener2_create instead")));
+;
 VINPUT_PUBLIC VInputError EventListener2_create(EventListener *listener,
     bool listen_keyboard, bool listen_mouse_button, bool listen_mouse_move);
 // Make a Listener start listening. This is a blocking call.
 VINPUT_PUBLIC VInputError EventListener_start(
-    EventListener *listener, KeyboardCallback callback);
+    EventListener *listener, KeyboardCallback callback)
+    __attribute__((deprecated("Use EventListener2_start instead")));
+;
 VINPUT_PUBLIC VInputError EventListener2_start(EventListener *listener,
     KeyboardCallback callback, MouseButtonCallback button_callback,
     MouseMoveCallback move_callback);
