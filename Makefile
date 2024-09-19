@@ -7,18 +7,28 @@ endif
 
 VERSION = 0x010100
 
-# Linux/X11
+SRC = src/libvinput.c
+
+# Linux/X11/uinput+evdev
 ifeq ($(shell uname), Linux)
 all: wordlogger test_emu
 
-libvinput.so: src/libvinput.c src/linux_emu.c src/linux.c
-	$(CC) $(CFLAGS) -DVERSION=$(VERSION) -fPIC -o $@ -shared $^ -lm -lX11 -lXtst -I/usr/local/include -Isrc -L/usr/local/lib -lxdo
+SRC += \
+	src/linux_emu.c \
+	src/linux.c \
+	src/linux_x11.c \
+	src/linux_emu_x11.c \
+	src/linux_evdev.c \
+	src/linux_uinput_emu.c
+
+libvinput.so: $(SRC)
+	$(CC) $(CFLAGS) -DVERSION=$(VERSION) -fPIC -o $@ -shared $^ -lm -lX11 -lXtst -levdev -I/usr/local/include -Isrc -L/usr/local/lib -lxdo
 
 wordlogger: wordlogger.c libvinput.so
-	$(CC) $(CFLAGS) wordlogger.c -o $@ -L. -lvinput -lX11 -lXtst -I/usr/local/include -Isrc -L/usr/local/lib -lxdo
+	$(CC) $(CFLAGS) wordlogger.c -o $@ -L. -lvinput -lX11 -lXtst -levdev -I/usr/local/include -Isrc -L/usr/local/lib -lxdo
 
 test_emu: test_emu.c libvinput.so
-	$(CC) $(CFLAGS) test_emu.c -o $@ -L. -lvinput -lX11 -lXtst -I/usr/local/include -Isrc -L/usr/local/lib -lxdo
+	$(CC) $(CFLAGS) test_emu.c -o $@ -L. -lvinput -lX11 -lXtst -levdev -I/usr/local/include -Isrc -L/usr/local/lib -lxdo
 
 install: libvinput.so
 	rm -f /usr/local/lib/libvinput.* && install -m 777 libvinput.so /usr/local/lib && mv /usr/local/lib/libvinput.so /usr/local/lib/libvinput.so.$(VERSION) && ln -s /usr/local/lib/libvinput.so.$(VERSION) /usr/local/lib/libvinput.so
@@ -35,7 +45,11 @@ endif
 ifeq ($(shell uname), Darwin)
 all: wordlogger_mac test_emu_mac
 
-libvinput.dylib: src/libvinput.c src/macos_emu.c src/macos.c
+SRC += \
+	src/macos_emu.c \
+	src/macos.c
+
+libvinput.dylib: $(SRC)
 	$(CC) $(CFLAGS) -DVERSION=$(VERSION) -arch arm64 -arch x86_64 -fPIC -framework ApplicationServices -framework Carbon -o $@ -shared $^
 
 wordlogger_mac: wordlogger.c libvinput.dylib
@@ -52,6 +66,7 @@ endif
 
 # Windows/WINAPI
 ifeq ($(OS), Windows_NT)
+
 all: wordlogger libvinput.dll vinput.lib
 	dumpbin /EXPORTS vinput.lib
 
@@ -83,7 +98,11 @@ endif
 ifeq ($(OS), MINGW)
 all: wordlogger.exe test_emu.exe libvinput.dll
 
-libvinput.dll: src/libvinput.c src/windows_emu.c src/windows.c
+SRC += \
+	src/windows_emu.c \
+	src/windows.c
+
+libvinput.dll: $(SRC)
 	x86_64-w64-mingw32-gcc $(CFLAGS) -DVERSION=$(VERSION) -shared -o $@ $^ -DWINVER=0x0600 -luser32 -lkernel32
 
 wordlogger.exe: wordlogger.c libvinput.dll
