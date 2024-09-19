@@ -1,4 +1,10 @@
-CFLAGS = -I. -Wall -Wextra -O0 -ggdb #-O3
+CFLAGS = -I. -Wall -Wextra
+ifeq ($(DEBUG),1)
+	CFLAGS += -O0 -ggdb
+else
+	CFLAGS += -O3
+endif
+
 VERSION = 0x010100
 
 # Linux/X11
