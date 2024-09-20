@@ -5,18 +5,30 @@
 
 bool is_x11(void)
 {
-	return strcmp(getenv("XDG_SESSION_TYPE"), "x11") == 0;
+	char *env = getenv("XDG_SESSION_TYPE");
+	if (!env) return false;
+	return strcmp(env, "x11") == 0;
 }
 
+extern VInputError _x11_EventListener_init(EventListener *listener);
 extern VInputError x11_EventListener2_start(EventListener *listener,
     KeyboardCallback callback, MouseButtonCallback button_callback,
     MouseMoveCallback move_callback);
 extern VInputError x11_EventListener_free(EventListener *listener);
 
+extern VInputError _evdev_EventListener_init(EventListener *listener);
 extern VInputError evdev_EventListener2_start(EventListener *listener,
     KeyboardCallback callback, MouseButtonCallback button_callback,
     MouseMoveCallback move_callback);
 extern VInputError evdev_EventListener_free(EventListener *listener);
+
+VInputError _EventListener_init(EventListener *listener)
+{
+	if (is_x11())
+		return _x11_EventListener_init(listener);
+	else
+		return _evdev_EventListener_init(listener);
+}
 
 VInputError EventListener2_start(EventListener *listener, KeyboardCallback callback,
     MouseButtonCallback button_callback, MouseMoveCallback move_callback)

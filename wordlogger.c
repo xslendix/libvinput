@@ -105,12 +105,16 @@ int main(void)
 
 	VInputError status = EventListener2_create(&g_listener, true, true, true);
 	if (status != VINPUT_OK) {
-		fprintf(stderr, "ERROR: Failed to create keyboard listener! Error: %s",
+		fprintf(stderr, "ERROR: Failed to create keyboard listener! Error: %s\n",
 		    VInput_error_get_message(status));
 	}
 
-	EventListener2_start(
-	    &g_listener, &keyboard_callback, &mouse_button_callback, &mouse_move_callback);
+	if ((status = EventListener2_start(
+	         &g_listener, &keyboard_callback, &mouse_button_callback, &mouse_move_callback))
+	    != VINPUT_OK) {
+		fprintf(stderr, "ERROR: Failed to start keyboard listener! Error: %s\n",
+		    VInput_error_get_message(status));
+	}
 
 	return 0;
 }

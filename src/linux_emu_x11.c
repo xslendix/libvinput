@@ -20,7 +20,7 @@ typedef struct _EventEmulatorInternal
 	xdo_t *xdo;
 } EventEmulatorInternal;
 
-VInputError _EventEmulator_init(EventEmulator *emulator)
+VInputError _x11_EventEmulator_init(EventEmulator *emulator)
 {
 	emulator->data = malloc(sizeof(EventEmulatorInternal));
 	EventEmulatorInternal *data = emulator->data;

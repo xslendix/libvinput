@@ -2,6 +2,7 @@
 
 extern bool is_x11(void);
 
+extern VInputError _x11_EventEmulator_init(EventEmulator *emulator);
 VInputError x11_EventEmulator_keyboard_state_get(
     EventEmulator *emulator, int **state, int *nstate);
 VInputError x11_EventEmulator_keyboard_state_clear(EventEmulator *emulator);
@@ -13,6 +14,7 @@ VInputError x11_EventEmulator_typec(EventEmulator *emulator, char ch);
 VInputError x11_EventEmulator_types(EventEmulator *emulator, char *buf, size_t len);
 VInputError x11_EventEmulator_free(EventEmulator *emulator);
 
+extern VInputError _uinput_EventEmulator_init(EventEmulator *emulator);
 VInputError uinput_EventEmulator_keyboard_state_get(
     EventEmulator *emulator, int **state, int *nstate);
 VInputError uinput_EventEmulator_keyboard_state_clear(EventEmulator *emulator);
@@ -23,6 +25,14 @@ VInputError uinput_EventEmulator_release(EventEmulator *emulator, uint16_t keysy
 VInputError uinput_EventEmulator_typec(EventEmulator *emulator, char ch);
 VInputError uinput_EventEmulator_types(EventEmulator *emulator, char *buf, size_t len);
 VInputError uinput_EventEmulator_free(EventEmulator *emulator);
+
+VInputError _EventEmulator_init(EventEmulator *emulator)
+{
+	if (is_x11())
+		return _x11_EventEmulator_init(emulator);
+	else
+		return _uinput_EventEmulator_init(emulator);
+}
 
 VInputError EventEmulator_keyboard_state_get(
     EventEmulator *emulator, int **state, int *nstate)

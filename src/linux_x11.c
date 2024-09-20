@@ -28,7 +28,7 @@ typedef struct _EventListenerInternal
 	KeyboardModifiers modifiers;
 } EventListenerInternal;
 
-VInputError _EventListener_init(EventListener *listener)
+VInputError _x11_EventListener_init(EventListener *listener)
 {
 	listener->data = malloc(sizeof(EventListenerInternal));
 	EventListenerInternal *data = listener->data;

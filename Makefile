@@ -5,7 +5,7 @@ else
 	CFLAGS += -O3
 endif
 
-VERSION = 0x010100
+VERSION = 0x010200
 
 SRC = src/libvinput.c
 
@@ -22,7 +22,7 @@ SRC += \
 	src/linux_uinput_emu.c
 
 libvinput.so: $(SRC)
-	$(CC) $(CFLAGS) -DVERSION=$(VERSION) -fPIC -o $@ -shared $^ -lm -lX11 -lXtst -levdev -I/usr/local/include -Isrc -L/usr/local/lib -lxdo
+	$(CC) $(CFLAGS) -DVERSION=$(VERSION) -fPIC -o $@ -shared $^ -lm -lX11 -lXtst -levdev -I/usr/include/libevdev-1.0 -I/usr/local/include -Isrc -L/usr/local/lib -lxdo
 
 wordlogger: wordlogger.c libvinput.so
 	$(CC) $(CFLAGS) wordlogger.c -o $@ -L. -lvinput -lX11 -lXtst -levdev -I/usr/local/include -Isrc -L/usr/local/lib -lxdo

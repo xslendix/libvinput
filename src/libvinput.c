@@ -28,6 +28,10 @@ VINPUT_PUBLIC char const *VInput_error_get_message(VInputError error)
 	case VINPUT_X11_XRECORD_CONTEXT: return "Failed to create XRecord context";
 	case VINPUT_X11_DISPLAY_DATALINK: return "Failed to open datalink X11 display";
 	case VINPUT_X11_ENABLE_XRECORD: return "Failed to enable XRecord context";
+	case VINPUT_XKB: return "Failed to key keymap from XKB";
+	case VINPUT_DEV_INPUT_DIR: return "Failed to open /dev/input directory";
+	case VINPUT_NO_PERM: return "Not enough permissions to open /dev/input file";
+	case VINPUT_IOCTL_FAIL: return "Failed to get information on input device";
 	case VINPUT_XDO_NEW: return "Failed to create xdo instance";
 	case VINPUT_MAC_TAP: return "Cannot create event tap";
 	case VINPUT_MAC_EVENT_CREATION: return "Cannot create key event";
