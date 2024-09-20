@@ -5,7 +5,7 @@ else
 	CFLAGS += -O3
 endif
 
-VERSION = 0x010200
+VERSION = 0x010201
 
 SRC = src/libvinput.c
 
@@ -120,6 +120,8 @@ clean:
 	del /F /Q libvinput.dll vinput.lib libvinput.obj windows_emu.obj windows.obj
 endif
 
-.PHONY: all clean
+cppcheck:
+	cppcheck --enable=warning --check-level=exhaustive --inconclusive --std=c99 --force --quiet -i src/ext/vec.c $(SRC) wordlogger.c test_emu.c
 
-.PHONY: install clean
+.PHONY: all clean cppcheck install
+

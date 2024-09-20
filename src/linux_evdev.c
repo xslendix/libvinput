@@ -150,7 +150,7 @@ void handle_key_event(
 				event.keychar = 0;
 			event.timestamp = ev.time.tv_sec * 1000 + ev.time.tv_usec / 1000;
 
-			callback(event);
+			if (callback) callback(event);
 		}
 	}
 }
@@ -172,7 +172,7 @@ void handle_mouse_event(struct libevdev *dev, MouseButtonCallback button_callbac
 			}
 
 			event.kind = ev.value == 1 ? MousePressEvent : MouseReleaseEvent;
-			button_callback(event);
+			if (button_callback) button_callback(event);
 		} else if (ev.type == EV_REL) {
 			MouseMoveEvent move_event;
 			switch (ev.code) {
@@ -187,7 +187,7 @@ void handle_mouse_event(struct libevdev *dev, MouseButtonCallback button_callbac
 			move_event.velocity = sqrt(move_event.velocity_x * move_event.velocity_x
 			                           + move_event.velocity_y * move_event.velocity_y);
 
-			move_callback(move_event);
+			if (move_callback) move_callback(move_event);
 		}
 	}
 }
