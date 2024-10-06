@@ -7,6 +7,8 @@ wordlogger_mac
 test_emu
 test_emu_mac
 test_emu.exe
+test_echo
+test_echo.exe
 *.dSYM
 dist
 build

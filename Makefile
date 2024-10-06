@@ -11,7 +11,7 @@ SRC = src/libvinput.c
 
 # Linux/X11/uinput+evdev
 ifeq ($(shell uname), Linux)
-all: wordlogger test_emu
+all: wordlogger test_emu test_echo
 
 ifeq ($(OS), MINGW)
 all: wordlogger.exe test_emu.exe libvinput.dll
@@ -29,6 +29,9 @@ wordlogger.exe: wordlogger.c libvinput.dll
 test_emu.exe: test_emu.c libvinput.dll
 	x86_64-w64-mingw32-gcc $(CFLAGS) -o $@ test_emu.c -L. -lvinput -DWINVER=0x0600 -luser32 -lkernel32
 
+test_echo.exe: test_echo.c libvinput.dll
+	x86_64-w64-mingw32-gcc $(CFLAGS) -o $@ test_echo.c -L. -lvinput -DWINVER=0x0600 -luser32 -lkernel32
+
 clean:
 	rm -f wordlogger.exe
 	rm -f libvinput.dll
@@ -45,13 +48,16 @@ SRC += \
 
 
 libvinput.so: $(SRC)
-	$(CC) $(CFLAGS) -DVERSION=$(VERSION) -fPIC -o $@ -shared $^ -lm -lX11 -lXtst -levdev -I/usr/include/libevdev-1.0 -I/usr/local/include -Isrc -L/usr/local/lib -lxdo
+	$(CC) $(CFLAGS) -DVERSION=$(VERSION) -fPIC -o $@ -shared $^ -lm -lX11 -lXtst $(shell pkg-config --cflags --libs libevdev) -I/usr/local/include -Isrc -L/usr/local/lib -lxdo
 
 wordlogger: wordlogger.c libvinput.so
 	$(CC) $(CFLAGS) wordlogger.c -o $@ -L. -lvinput -lX11 -lXtst -levdev -I/usr/local/include -Isrc -L/usr/local/lib -lxdo
 
 test_emu: test_emu.c libvinput.so
 	$(CC) $(CFLAGS) test_emu.c -o $@ -L. -lvinput -lX11 -lXtst -levdev -I/usr/local/include -Isrc -L/usr/local/lib -lxdo
+
+test_echo: test_echo.c libvinput.so
+	$(CC) $(CFLAGS) test_echo.c -o $@ -L. -lvinput -lX11 -lXtst -levdev -I/usr/local/include -Isrc -L/usr/local/lib -lxdo
 
 install: libvinput.so
 	rm -f /usr/local/lib/libvinput.* && install -m 777 libvinput.so /usr/local/lib && mv /usr/local/lib/libvinput.so /usr/local/lib/libvinput.so.$(VERSION) && ln -s /usr/local/lib/libvinput.so.$(VERSION) /usr/local/lib/libvinput.so
@@ -82,6 +88,9 @@ wordlogger_mac: wordlogger.c libvinput.dylib
 
 test_emu_mac: test_emu.c libvinput.dylib
 	$(CC) $(CFLAGS) test_emu.c -o $@ -Isrc -L. -lvinput -Wl,-rpath,@loader_path/.
+
+test_echo: test_echo.c libvinput.dylib
+	$(CC) $(CFLAGS) test_echo.c -o $@ -Isrc -L. -lvinput -Wl,-rpath,@loader_path/.
 
 clean:
 	rm -f wordlogger_mac
@@ -115,6 +124,9 @@ wordlogger: wordlogger.c vinput.lib
 
 test_emu: test_emu.c vinput.lib
 	cl /I src /Fo$@ /Fe$@ test_emu.c vinput.lib User32.lib Kernel32.lib
+
+test_echo: test_echo.c vinput.lib
+	cl /I src /Fo$@ /Fe$@ test_echo.c vinput.lib User32.lib Kernel32.lib
 
 clean:
 	del /F /Q libvinput.dll vinput.lib libvinput.obj windows_emu.obj windows.obj

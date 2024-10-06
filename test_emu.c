@@ -7,7 +7,10 @@ int main(void)
 {
 	EventEmulator emu;
 	VInputError err = EventEmulator_create(&emu);
-	if (err) printf("Error: %s\n", VInput_error_get_message(err));
+	if (err) {
+		printf("Error: %s\n", VInput_error_get_message(err));
+		return 1;
+	}
 
 	puts("5");
 	sleep(1);
@@ -21,9 +24,18 @@ int main(void)
 	sleep(1);
 
 	err = EventEmulator_typec(&emu, 'H');
-	if (err) printf("Error: %s\n", VInput_error_get_message(err));
+	if (err) {
+		printf("Error: %s\n", VInput_error_get_message(err));
+		return 1;
+	}
 	err = EventEmulator_typec(&emu, 'i');
-	if (err) printf("Error: %s\n", VInput_error_get_message(err));
+	if (err) {
+		printf("Error: %s\n", VInput_error_get_message(err));
+		return 1;
+	}
 	err = EventEmulator_types(&emu, "\nHello world!", 13);
-	if (err) printf("Error: %s\n", VInput_error_get_message(err));
+	if (err) {
+		printf("Error: %s\n", VInput_error_get_message(err));
+		return 1;
+	}
 }
